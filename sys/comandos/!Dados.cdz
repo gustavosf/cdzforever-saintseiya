@@ -1,0 +1,167 @@
+alias com_chat_@dados com_chat_!dados $1-
+alias com_chat_!dados {
+  id.check =
+  var %nick = $dados($iif($1,$1,$nick),nick)
+  if (!%nick) msgehalt O usuário08 $1 15não está cadastrado no bot!
+
+  msgtopo
+  msgt 0SaintSeiya 14:: 0Dados
+  var %desc = $dados(%nick,desc)
+  if (%nick !isin %desc) %desc = %desc %nick
+  %desc = $replace(%desc,%nick,08 $+ %nick $+ 15)
+  xmsgt 14 $+ %desc
+  msgt 14Último acesso em $date($dados(%nick,ua)) ás $time($dados(%nick,ua))
+  msgl
+  ;; ------------------------------------------------- DADOS
+  msgtd 0Dados
+  msgl
+  var %i = $user.perfil.idade(%nick)
+  var %vigor =  Vigor $str( ,$calc(16 - $len($user.vigor(%nick)))) $+ $user.vigor(%nick) $+ $chr(37) $+  
+  var %v = $floor($calc($user.vigor(%nick) * 25 / 100))
+  %vigor = 00,04 $+ $left(%vigor,%v) $+ 00,01 $+ $right(%vigor,$calc($len(%vigor) - %v)) $+ 0,1
+  var %aura = $aura(%nick).x
+  var %a = $floor($calc($aura(%nick) * 25 / 113))
+  %aura =  Aura $+ $str( ,$calc(19 - $len(%aura))) $+ %aura $+  
+  %aura = 01,08 $+ $left(%aura,%a) $+ 00,01 $+ $right(%aura,$calc($len(%aura) - %a)) $+ 0,1
+  msgl     8 o 15     Sexo: $replace($dados(%nick,sexo),masculino,11Masculino,feminino,13Feminino )     %vigor
+  msgl     8 $+ $replace($rand(1,3),1,¯,2,<,3,/) $+ $chr(124) $+ $replace($rand(1,3),1,¯,2,>,3,\) $+ 15     Idade:00 %i $str( ,$calc(11 - $len(%i))) %aura
+  msgl     8 $+ $replace($rand(1,2),1,/,2,<) $replace($rand(1,2),1,\,2,>)
+  msgl             Cosmo:08 $div($dados(%nick,cosmo))
+  msgl 14 $+ $center(Top $top(%nick),11) 15Dinheiro: 09$ $+ $div($dados(%nick,dinheiro)) $spc($div($dados(%nick,dinheiro)),13) 15Méritos:11 $div($dados(%nick,meritos))
+  msgl
+  ;; ------------------------------------------------- ADMIN
+  if ($oplv($nick) == 3) {
+    msgtd 0Informações Especiais (restritas a administração) | msgl
+    msgl Último IP:0 $dados(%nick,IpIdent) 15em0 $date($dados(%nick,ua)) 15ás0 $time($dados(%nick,ua))
+    msgl E-Mail:0 $iif($user.perfil.email(%nick),$v1,Nenhum)
+    msgl
+  }
+  ;; ------------------------------------------------- Prisão
+  if ($user.prisao(%nick)) {
+    msgtd
+    msgtd 15A conta deste usuário está presa até o dia8 $date($user.prisao.ate(%nick),dd/mm) 15ás8 $date($user.prisao.ate(%nick),HH:nn)
+    msgtd 15Usuário preso por1 $user.prisao.por(%nick) $+ 15, por motivo de0 $user.prisao.motivo(%nick)
+    msgrd
+  } 
+  ;; ------------------------------------------------- ARMADURA
+  var %arm = $user.armadura(%nick)
+  var %armx = $arms.prepare(%arm)
+  if (%arm != nenhuma) {
+    msgtd 0Armadura | msgl
+    var %armp = $iif($len(%arm) < 14,%arm,$left(%arm,12) $+ .)
+    ;msgl  Armadura:08 $replace(,meda negro,meda N.,cavalo,C.,de Sapuris,Sap.) $spc($replace(%arm,meda negro,meda N.,Cavalo,C.,de Sapuris,Sap.),13) $+ 0,14 Golpes                         0,1
+    msgl  Armadura:08 %armp $spc(%armp,13) $+ 0,14 Golpes                         0,1
+    var %x = 1,%l,%g = $arms.golpes(%arm)
+    while (%x) {
+      var %gol = $gettok(%g,%x,44)
+      if (%x = 1) %l =     Mundo:0 $arms.mundo(%arm) $+ $spc($arms.mundo(%arm),14)
+      elseif (%x = 2) %l =      Cat.:0 $replace($arms.categoria(%arm),guerreiros,G.) $+ $spc($replace($arms.categoria(%arm),guerreiros,G.),14)
+      elseif (%x = 3) %l =    Classe:0 $arms.classe(%arm) $+ $spc($arms.classe(%armx),14)
+      elseif (%x = 4) %l =      Life:0 $dados(%nick,hp.arm) $+ / $+ $dados(%nick,hp.rec) $+ $spc($dados(%nick,hp.arm) $+ / $+ $dados(%nick,hp.rec),14)
+      elseif (%x = 5) %l =  Invocada:0 $replace($dados(%nick,Arm.On),Nao,Não) $+ $spc(aaa,14)
+      else %l = $str($chr(160),25)
+      if (%gol) %l = %l $iif($aura.quantize($golpe(%gol,$user.armadura(%nick)).aura) > $aura.quantize($aura(%nick).x),14,09) $+ $replace($golpe(%gol),Círculo das,Círc. das) $+ 15/00 $+ $golpe(%gol,$user.armadura(%nick)).aura
+      elseif (%x > 5) %x = -1
+      if (%x) msgl %l
+      inc %x
+    }
+  }
+  ;; ------------------------------------------------- ESTATISTICAS
+  msgtd 0             Combates            0,1 0,14         Quiz         
+  msgl
+  msgl  VIT EMP DER                        CER ERR
+  var %x = 1
+  var %com = $user.historico.combates(%nick) / 100
+  var %vit = $user.historico.vitorias(%nick) / %com,%der = $user.historico.derrotas(%nick) / %com,%emp = $user.historico.empates(%nick) / %com
+  var %pergs = $user.quiz.acertos(%nick) + $user.quiz.erros(%nick) / 100
+  var %cer = $user.quiz.acertos(%nick) / %pergs,%err = $user.quiz.erros(%nick) / %pergs,
+  while (%x <= 10) {
+    var %l =   $+ $iif(%vit > $calc(10 * %x),$+(0,$chr(44),9)) $+    0,1  $+ $iif(%emp > $calc(10 * %x),$+(0,$chr(44),8)) $+    0,1  $+ $iif(%der > $calc(10 * %x),$+(0,$chr(44),4)) $+    15,1 
+    if (%x == 1) %l = %l VIT14/09Vitórias14:00 $user.historico.vitorias(%nick)
+    elseif (%x == 2) %l = %l  EMP14/08Empates14:00 $user.historico.empates(%nick)
+    elseif (%x == 3) %l = %l DER14/04Derrotas14:00 $user.historico.derrotas(%nick)
+    elseif (%x == 4) %l = %l     11Combates14:00 $user.historico.combates(%nick)
+    elseif (%x == 5) %l = %l    7Narrações14:00 $user.historico.narradas(%nick)
+    %l = %l $+ $str($chr(160),$calc(35 - $len($strip(%l))))
+    %l = %l $iif(%cer > $calc(10 * %x),$+(0,$chr(44),9)) $+    0,1  $+ $iif(%err > $calc(10 * %x),$+(0,$chr(44),4)) $+    0,1 
+    if (%x == 1) %l = %l $user.quiz.acertos(%nick) Acertos
+    elseif (%x == 2) %l = %l $user.quiz.erros(%nick) Erros
+    msgl %l
+    if (%x > 5) && ($count(%l,) = 5) %x = 10
+    inc %x
+  }
+  ;; ------------------------------------------------- ITENS
+  msgtd 0QTD 0,1 0,14 Item                                 0,1 0,14 Tipo        
+  msgl
+  var %itens = $sorttok($lower($replace($dados(%nick,itens),$+($chr(44),$chr(32)),$chr(44))),44,a)
+  var %it,%q
+  var %x = 1,%i,%cat
+  while (%itens) {
+    %it = $gettok(%itens,1,44)
+    %q = $matchtok(%itens,%it,0,44)
+    if ($left(%it,2) = fc) { 
+      %i = FC $+ $mid(%it,3)
+      %cat = Crime
+    }
+    else {
+      %i = $iif($loja(%it,nome),$loja(%it,nome),%it)
+      %cat = $iif($loja(%it,cat),$loja(%it,cat),$iif($loja(%it,categoria),$loja(%it,categoria),-))
+    }
+    msgl $center(%q,3) 0  $left(%i,35) $+ $iif($len(%i) > 38,...) $+ $spc(%i,38) 07 $+ %cat
+    %itens = $remtok(%itens,%it,0,44)
+    if (%x > 15) unset %itens
+  }
+  msgbase
+}
+alias com_all_!calc {
+  if ($1) {
+    var %n = $iif($2,$2,$nick)
+    if ($dados(%n,nick)) {
+      if ($regex($1,/^([0-9]{1,2}|100)%$/)) { msgn 08 $+ $nick $+ 15,09 $1 15do $iif(%n == $nick,seu cosmo,cosmo de00 %n) 15equivale a08 $div($calc($dados(%n,cosmo) * ($regml(1) / 100))) 15de cosmo | return }
+    }
+    else { noticen 08 $+ $nick $+ 15, $iif($nick == %n,você,09 $+ %n) 15não 15está 0cadastrado 15no bot! | return }
+  }
+  noticen Parâmetro 4Errado 15ou 4Faltando15! 0,14 15,1 Uso:08 !calc <pct>% [nick] 0,14 15,1 Exemplo: 09!calc 7% nick 1,14 15,1 Use números inteiros entre 0 e 100.
+}
+
+
+alias com_chat_!golpes {
+  id.check =
+
+  var %nick = $dados($iif($1,$1,$nick),nick)
+
+  if (!%nick) msgehalt Este usuário 4não 15está 0cadastrado 15no bot!
+  if ($user.armadura(%nick) == Nenhuma) msgehalt $iif(%nick == $nick,Você,O usuário09 %nick) 4não 15possui nenhuma 0armadura15!
+
+  var %str = $str( ,$len(%nick)),%arm = $user.armadura(%nick),%msg.1,%msg.2,%msg.3
+
+  msgtopo
+  msgt 0SaintSeiya 14::0 Golpes
+  msgdiv
+  %msg.1 = %str 0,14 0,1 Cavaleiro de11 $user.armadura(%nick)
+  %msg.2 = %nick 0,14 0,1 Cosmo:08 $div($user.cosmo(%nick))
+  %msg.3 = %str 0,14 0,1 Aura09 $aura(%nick).x
+  %max = $max($len(%msg.1),$len(%msg.2),$len(%msg.3))
+  msgt %msg.1 $+ $str( ,$calc(%max - $len(%msg.1)))
+  msgt %msg.2 $+ $str( ,$calc(%max - $len(%msg.2)))
+  msgt %msg.3 $+ $str( ,$calc(%max - $len(%msg.3)))
+
+
+  var %golpes = $arms.golpes(%arm),%golpe,%g = $numtok(%golpes,44)
+  var %pode,%aura
+
+  while (%golpes) {
+    %golpe = $trim($gettok(%golpes,1,44))
+    msgt
+    msgtd %golpe
+    %aura = $golpe(%golpe).aura
+    if ($left(%aura,-1) isnum) %pode = $iif($v1 <= $aura(%nick),1,0)
+    else %pode = $iif($aura.quantize($aura(%nick).x) >= $aura.quantize(%aura),1,0)
+    msgt Aura necessária: $+ $iif(%pode,09,04) %aura
+    xmsgt $iif(%pode,0,14) $+ $golpe(%golpe).desc
+    %golpes = $deltok(%golpes,1,44)
+  }
+  msgdiv
+  msgt Total de11 %g 15golpes.
+  msgbase
+}

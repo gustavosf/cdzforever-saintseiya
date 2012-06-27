@@ -1,0 +1,44 @@
+on *:join:#cdzforever: {
+  if ($nick(#,0) > $gettok(%cdzfor.pico,1,32)) { 
+    set %cdzfor.pico $nick(#,0) $nick(#CdzForever,0,a) $nick(#CdzForever,0,o) $nick(#CdzForever,0,h) $nick(#CdzForever,0,v) $nick(#CdzForever,0,r) $ctime
+    twit Novo pico de usuários: $nick(#,0) - Acesse você tambem, #cdzforever @ irc.cdzforever.net 
+    msg #cdzforever 0,1 0,14 0,1 Novo pico de usuários 0,14 0,1 
+    remove pico.txt
+    who #cdzforever
+  }
+}
+
+raw *:*: { 
+  ;; echo -a $1- 15(01raw nº03;01 $numeric $+ 15) | halt ;; debug
+  if ($numeric == 352) { write pico.txt $3 $+ @ $+ $4 = $6  }
+}
+
+
+on *:text:*:*: {
+  if (!Entrar == $strip($1)) {
+    op.check +
+    if ($2 = todos) { join #Cdzsekai,#Cdztenkai,#Cdzkaikai,#Cdzmeikai,#Cdzmakai | .msg #CdzForever $c1 Entrei em 0Todos15 os canais de luta a mando de9 $nick $c2 }
+    elseif ($istok(#santuario #coliseu #cdzforever #cdzsekai #cdztenkai #cdzmakai #cdzmeikai #cdzkaikai #ss #cdzstaff #StarHill,#$2,32)) { join #$2 | .msg $chan $c1 Entrei no9 #$2 15a mando de9 $nick $c2 }
+    else .notice $nick $c1 Canal 4inválido14! $c2
+  }
+  if (!sair == $strip($1)) {  
+    op.check +
+    if ($2 = todos) { part #Cdzsekai,#Cdztenkai,#Cdzkaikai,#Cdzmeikai,#Cdzmakai | .msg #CdzForever $c1 Sai de 0Todos15 os canais de luta a mando de9 $nick $c2 }
+    elseif ($istok(#santuario #coliseu #cdzforever #cdzsekai #cdztenkai #cdzmakai #cdzmeikai #cdzkaikai #ss #cdzstaff #StarHill,#$2,32)) { part #$2 | .msg $chan $c1 Sai do9 #$2 15a mando de9 $nick $c2 }
+    else .notice $nick $c1 Canal 4inválido14! $c2
+  }
+}
+on *:chat:*: {
+  if (!Entrar == $strip($1)) {
+    op.check +
+    if ($2 = todos) { join #Cdzsekai,#Cdztenkai,#Cdzkaikai,#Cdzmeikai,#Cdzmakai | .msg #CdzForever $c1 Entrei em 0Todos15 os canais de luta a mando de9 $nick $c2 }
+    elseif ($istok(#santuario #coliseu #cdzforever #cdzsekai #cdztenkai #cdzmakai #cdzmeikai #cdzkaikai #ss #cdzstaff #StarHill,#$2,32)) { join #$2 | .msg $chan $c1 Entrei no9 #$2 15a mando de9 $nick $c2 }
+    else .notice $nick $c1 Canal 4inválido14! $c2
+  }
+  if (!sair == $strip($1)) {  
+    op.check +
+    if ($2 = todos) { part #Cdzsekai,#Cdztenkai,#Cdzkaikai,#Cdzmeikai,#Cdzmakai | .msg #CdzForever $c1 Sai de 0Todos15 os canais de luta a mando de9 $nick $c2 }
+    elseif ($istok(#santuario #coliseu #cdzforever #cdzsekai #cdztenkai #cdzmakai #cdzmeikai #cdzkaikai #ss #cdzstaff #StarHill,#$2,32)) { part #$2 | .msg $chan $c1 Sai do9 #$2 15a mando de9 $nick $c2 }
+    else .notice $nick $c1 Canal 4inválido14! $c2
+  }
+}

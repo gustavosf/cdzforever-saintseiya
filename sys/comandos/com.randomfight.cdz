@@ -1,0 +1,101 @@
+alias -l camufla {
+  var %msg = $1-,%x = $r(1,4)
+  while (%x < $len(%msg)) {
+    if ($mid(%msg,%x,2) !isalpha) inc %x
+    else {
+      %msg = $left(%msg,%x) $+ $replace($r(0,2),0,$chr(9),1,,2,) $+ $right(%msg,$calc($len(%msg) - %x))
+      inc %x $r(2,4)
+    }
+  }
+  msgto #cdzforever %msg
+}
+
+alias com_aux_randomfight {
+  .timer.sys.initrandomfight -o 1 $rand(10800,64800) com_aux_randomfight
+  if ($me !ison #cdzforever) halt
+  var %line = $read(sys/lists/cavs.list,$rand(1,$lines(sys/lists/cavs.list)))
+  var %cav = $gettok(%line,1,42)
+  var %lvl = $gettok(%line,2,42)
+  var %hp = $replace(%lvl,X,5000,S,1000,A,600,B,350,C,200,D,100)
+
+  hadd -m bot.randomfight hpini %hp
+  hadd bot.randomfight hp %hp
+  hadd bot.randomfight cav %cav
+  hadd bot.randomfight lvl %lvl
+  hdel -w bot.randomfight cav.*
+
+  camufla 08 $+ %cav 15aparece no canal, seu life é de09 %hp $+ 00HP
+  camufla Para 0atacá-lo15, digite 11!Atacar
+
+  hadd bot.randomfight tempo $r(50,90)
+  .timer.sys.randomfight 1 $hget(bot.randomfight,tempo) com_aux_randomfight_flee
+}
+
+alias com_aux_fake_randomfight {
+  camufla 08 $+ Quem atacar será banido 15aparece no canal, seu life é de09 12000 $+ 00HP
+  camufla Para 0atacá-lo15, digite 11!Atacar
+}
+
+alias com_aux_randomfight_flee {
+  var %cav = $hget(bot.randomfight,cav)
+  msgto #cdzforever 08 $+ %cav 15 $+ $iif(%cav == sega de sagitário,cansou de humilhar vocês e foi embora!,Fugiu!)
+  .hfree bot.randomfight
+}
+
+alias com_aux_randomfight_resume {
+  msgto #cdzforever 08 $+ $hget(bot.randomfight,cav) 15livrou-se de09 $1 $+ 15.
+  .timer.sys.randomfight -r
+}
+
+alias com_chan_!segurar {
+  if (!$hget(bot.randomfight)) return
+  if ($nick != sega) return
+  .timer.sys.randomfight -p
+  .timer.sys.randomfight.resume 1 $r(10,40) com_aux_randomfight_resume $nick
+  hadd bot.randomfight held $nick
+  msgto #cdzforever 09 $+ $nick 15segurou08 $hget(bot.randomfight,cav) $+ 15!0 Ele não pode fugir15!
+}
+
+alias com_chan_!atacar {
+  if ($chan == #cdzforever) {
+    if ($hget(bot.randomfight)) {
+      id.check
+      if ($hget(bot.randomfight,$+(cav.,$nick)) == $null) {
+        var %tempo = $hget(bot.randomfight,tempo) - $timer(.sys.randomfight).secs
+        var %cav = $hget(bot.randomfight,cav)
+        var %a = $aura($nick)
+        var %hp = $iif($r(1,10) = 1 || %tempo < 4,0,$r($ceil($calc(%a / 3)),$calc(%a * 2)))
+        hdec bot.randomfight hp %hp
+        var %hpf = $iif($hget(bot.randomfight,hp) < 0,0,$v1)
+        var %hpt = $hget(bot.randomfight,hpini)
+        hadd bot.randomfight $+(cav.,$nick) %hp
+        if (%hp = 0) msgto #cdzforever 00 $+ $nick 4errou 15o ataque,11 $hget(bot.randomfight,cav) 15não tomou nenhum dano 15(HP:08 $hget(bot.randomfight,hp) $+ 15/09 $+ $hget(bot.randomfight,hpini) $+ 15)
+        else msgto #cdzforever 00 $+ $nick 15tirou04 %hp 15de11 %cav 15(HP:08 %hpf $+ 15/09 $+ %hpt $+ 15)
+        if (%hpf <= 0) {
+
+          hadd bot.randomfight hp 0
+          var %merito = $replace($hget(bot.randomfight,lvl),X,5000,S,1000,A,600,B,350,C,200,D,100)
+          msgto #cdzforever 08 $+ $hget(bot.randomfight,cav) 15foi derrotado. Todos que provocaram dano no adversário ganham08 %merito 15méritos!
+          var %x = $hfind(bot.randomfight,cav.*,0,w)
+          while (%x) {
+            var %cav = $gettok($hfind(bot.randomfight,cav.*,%x,w),2,46)
+            if ($hget(bot.randomfight,cav. $+ %cav)) {
+              w+ %cav meritos $calc($dados(%cav,meritos) + %merito)
+            }
+            dec %x
+          }
+          ;;!? fazer drop aleatório de item aleatório 
+          hfree bot.randomfight
+          .timer.sys.randomfight* off
+        }
+        if ((%hpf > 0 && $r(1,4) = 1) || %tempo < 4) {
+          var %dano = $replace($hget(bot.randomfight,lvl),X,$rand(20,40),S,$rand(10,20),A,$rand(10,15),B,$rand(5,15),C,$rand(5,10),D,$rand(0,5))
+          user.stamina.retrieve %dano
+          msgto #cdzforever 11 $+ $hget(bot.randomfight,cav) 15contra-ataca09 $nick $+ 15!09 $nick 15perde04 %dano 15de vigor!
+        }
+      }
+      ;else noticeto $nick Você já atacou08 $hget(bot.randomfight,cav) $+ 15!
+    }
+    ;else noticen Nenhuma luta corrente 14:)
+  }
+}

@@ -1,0 +1,133 @@
+;; ----------------------------------------------------------------------------
+;; Comando :: all :: +Aura
+;; Retorna informações detalhadas sobre a aura do usuário
+;; Usa [aura] como auxiliar
+;; ----------------------------------------------------------------------------
+alias com_chan_+aura {
+  var %aura = $strip($1-)
+  if (!$regex($1,/^([0-9]{1,3})x$/)) && (!$istok(Máxima Extrema Divina suprema,%aura,32)) {
+    var %nick = $iif(%aura,%aura,$nick)
+    if $dados(%nick,cosmo) {
+      var %x = $aura(%nick)
+      var %cosmo = $dados(%nick,cosmo)
+      var %aura = $replace($iif(%x <= 100, $+ %x $+ x,%x),101,Máxima 0lv081,102,Máxima 0lv082,103,Máxima 0lv083,104,Extrema 0lv081,105,Extrema 0lv082,106,Extrema 0lv083,107,Suprema 0lv081,108,Suprema 0lv082,109,Suprema 0lv083,110,Divina 0lv081,111,Divina 0lv082,112,Divina 0lv083,113,Divina 0lv08S)
+      var %aura.x = $replace(%x,101,200,102,300,103,400,104,500,105,600,106,700,107,800,108,900,109,1000,110,10000,111,100000,112,1000000,113,10000000)
+      var %aura.prox = $replace($iif(%x <= 99, $+ $calc(%x + 1) $+ x,$calc(%x + 1)),101,Máxima 0lv081,102,Máxima 0lv082,103,Máxima 0lv083,104,Extrema 0lv081,105,Extrema 0lv082,106,Extrema 0lv083,107,Suprema 0lv081,108,Suprema 0lv082,109,Suprema 0lv083,110,Divina 0lv081,111,Divina 0lv082,112,Divina 0lv083,113,Divina 0lv08S)
+      var %sentido = $iif(%x isnum 1-53,086º15 Sentido,$iif(%x isnum 54-99,087º15 Sentido,$iif(%x isnum 100-112,088º15 Sentido,088º15 Sentido))))
+      if %x < 113 { var %complemento = $iif(%nick = $nick,Você,Ele14(15a14)0) precisa de mais08 $div($calc($aura(%x).lvl - %cosmo)) 0de 15Cosmo 0para passar à 15Aura09 %aura.prox $+ 0. }
+      else { var %complemento $iif(%nick = $nick,Você,Ele14(15a14)0) já alcançou 8todos 0os limites do 15Cosmo0. }
+      msg # 0,1 0,14 0,1 Aura -8>15 %nick 14/0 Cosmo14:09 $div(%cosmo) 14( $+ %sentido $+ 14) / 0Aura Máxima09 %aura 14(15 $+ $div($calc(%cosmo * %aura.x)) $+  0de Cosmo14) /0 %complemento 0,14 0,1 
+    }
+    else { .notice $nick 0,1 0,14 15,1 $iif(%nick = $nick,Você,O usuário 14"09 $+ %aura $+ 14") 4não15 está 0cadastrado15! 0,14 0,1  }
+  }
+  else {
+    if !$istok(Máxima Extrema Divina Suprema,%aura,32) {
+      if $left(%aura,$calc($len(%aura) - 1)) isnum 1-100 {
+        var %x = $int($left(%aura,$calc($len(%aura) - 1))),%lvs = 3001,10001,20001,30001,40001,50001,60001,70001,80001,100001,120001,140001,160001,180001,200001,220001,240001,260001,280001,300001,330001,360001,390001,420001,450001,480001,510001,540001,590001,640001,690001,740001,790001,840001,890001,940001,990001,1040001,1090001,1170001,1250001,1330001,1410001,1490001,1570001,1650001,1730001,1810001,1890001,1990001,2090001,2190001,2290001,2390001,2490001,2590001,2690001,2790001,2890001,3000001,3110001,3220001,3330001,3440001,3550001,3660001,3770001,3880001,3990001,4130001,4250001,4370001,4490001,4610001,4730001,4850001,4970001,5090001,5210001,5360001,5510001,5660001,5810001,5960001,6110001,6260001,6410001,6560001,6710001,6910001,7110001,7310001,7510001,7710001,7910001,8110001,8310001,8510001,8710001,9000001,10000001,11000001,12000001,13000001,14000001,15000001,20000001,30000001,50000001,100000001,200000001,500000001
+        if %x = 1 { msg # 0,1 0,14 0,1 Info -8> 0Aura08 %aura 0,14 0,1 091x 14=00 115-8>003.000 14| 092x 14= 003.00115-8>0010.000 0,14 0,1  }
+        if %x = 100 { msg # 0,1 0,14 0,1 Info -8> 0Aura08 %aura 0,14 09,01 99x 14=00 8.510.00115-8>008.710.000 14| 09100x 14= 008.710.00115-8>009.000.000 0,14 0,1  }
+        if %x isnum 2-99 { msg # 0,1 0,14 0,1 Info -8> 0Aura08 %x 0,14 09,01 $calc(%x - 1) $+ x 14=00 $div($replace($calc($gettok(%lvs,$calc(%x - 2),44) + 1),113,1)) $+ 15-8>00 $+ $div($gettok(%lvs,$calc(%x -1),44)) 14|09 %x $+ x 14=00 $div($calc($gettok(%lvs,$calc(%x -1),44) + 1)) $+ 15-8>00 $+ $div($gettok(%lvs,%x,44)) 14|09 $calc(%x +1) $+ x 14=00 $div($calc($gettok(%lvs,%x,44) + 1)) $+ 15-8>00 $+ $div($gettok(%lvs,$calc(%x +1),44)) 0,14 0,1  }
+      }
+      else { .notice $nick 0,1 0,14 0,1 Aura 14'09 $+ %aura $+ 14' 4inválida. 0,14 0,1 }
+    }
+    else {
+      if %aura = Máxima { msg # 0,1 0,14 0,1 Info -8> 0Aura08 Máxima 0,14 00,01 lv91 14=00 9.000.00115-8>0010.000.000 14|00 lv92 14= 0010.000.00115-8>0011.000.000 14|00 lv93 14= 0011.000.00115-8>0012.000.000 0,14 0,1  }
+      if %aura = Extrema { msg # 0,1 0,14 0,1 Info -8> 0Aura08 Extrema 0,14 00,01 lv91 14=00 12.000.00115-8>0013.000.000 14|00 lv92 14= 0013.000.00115-8>0014.000.000 14|00 lv93 14= 0014.000.00115-8>0015.000.000 0,14 0,1  }
+      if %aura = Suprema { msg # 0,1 0,14 0,1 Info -8> 0Aura08 Suprema 0,14 00,01 lv91 14=00 15.000.00115-8>0020.000.000 14|00 lv92 14= 0020.000.00115-8>0030.000.000 14|00 lv93 14= 0030.000.00115-8>0040.000.000 0,14 0,1  }
+      if %aura = Divina { msg # 0,1 0,14 0,1 Info -8> 0Aura08 Divina 0,14 00,01 lv91 14=00 40.000.00115-8>0050.000.000 14|00 lv92 14= 0050.000.00115-8>00100.000.000 14|00 lv93 14= 00100.000.00115-8>00500.000.000 14|00 lv9S 14= 15Mais de 00500.000.001 15de 0Cosmo 0,14 0,1  }
+    }
+  }
+}
+;; ----------------------------------------------------------------------------
+;; Comando :: all :: group(!aura,@aura)
+;; Retorna informações simplificadas sobre a aura do usuário, ou de algum outro
+;; usuário repassado
+;; usa [aura] como auxiliar
+;; ----------------------------------------------------------------------------
+alias com_all_!aura com_aux_aura $nick
+alias com_all_@aura com_aux_aura $1
+alias com_aux_aura {
+  id.check noident
+  if ($dados($1,nick)) {
+    var %aura = $aura($1)
+    var %aura.x = $replace(%aura,101,200,102,300,103,400,104,500,105,600,106,700,107,800,108,900,109,1000,110,10000,111,100000,112,1000000,113,10000000)
+    var %cosmo = $calc($dados($1,cosmo) * %aura.x)
+    var %pre = $iif($1 == $nick,sua Aura,a Aura de0 $dados($1,nick) $+ 15)
+    msgn 0 $+ $nick $+ 15, %pre brilha com $iif(%aura > 100,intensidade09 $aura($1).x,09 $+ %aura $+ x 15de intensidade) $+ 15, elevando seu cosmo a0  $+ $div(%cosmo) $+ 15!
+  }
+  else {
+    if ($1) noticen 9 $+ $1 15não está Cadastrado no Bot!
+    else noticen Você precisa indicar um 9nick15 para verificar a aura, tipo assim 8@Aura nick
+  }
+}
+
+alias com_chan_.cosmo com_aux_cosmo $iif($1,$1,$nick)
+alias com_aux_cosmo {
+  id.check noident
+  if ($chan != #starhill && $nick != sega) return
+  if ($dados($1,nick)) {
+    var %cosmo = $user.cosmo.real($1)
+    var %dif = $round($calc(100 - (%cosmo * 100 / $user.cosmo($1))),1)
+    msgn 0Cosmo -8>15 $1 14/0 Cosmo14:9 $div($dados($1,cosmo)) 14(11 $+ $aura($1).x $+ 14/08 $+ $aura($1).sentido $+ º 15Sentido14) 14/0 Vigor:08 $user.vigor($1) 14/0 Dano:04 %dif $+ % 14/0 Cosmo Real14:09 $div(%cosmo) 14(11 $+ $aura(%cosmo).x $+ 14/08 $+ $aura(%cosmo).sentido $+ º 15Sentido14)
+  }
+  else {
+    if ($1) noticen 9 $+ $1 15não está Cadastrado no Bot!
+    else noticen Você precisa indicar um 9nick15 para verificar a aura, tipo assim 8@Aura nick
+  }
+}
+
+
+alias com_chan_.aura com_aux_newaura $iif($1,$1,$nick)
+alias com_aux_newaura {
+  reforma sega
+  id.check noident
+  if ($dados($1,nick)) {
+    var %cosmo = $user.cosmo.real($1)
+    var %sta = $round($calc(%cosmo * 100 / $dados($1,cosmo)),1)
+    var %aura = $aura(%cosmo)
+    var %aura.x = $replace(%aura,101,200,102,300,103,400,104,500,105,600,106,700,107,800,108,900,109,1000,110,10000,111,100000,112,1000000,113,10000000)
+    var %cosmo = $calc(%cosmo * %aura.x)
+    var %pre = $iif($1 == $nick,sua Aura,a Aura de0 $dados($1,nick) $+ 15)
+    var %cor = $iif(%sta >= 90,11,$iif(%sta >= 60,09,$iif(%sta >= 20,08,04)))
+    msgn 0 $+ $nick $+ 15, %pre brilha com $iif(%aura > 100,intensidade09 $aura($1).x,09 $+ %aura $+ x 15de intensidade) $+ 15, atingindo $+ %cor %sta $+ % 15da sua capacidade total e elevando seu cosmo a0  $+ $div(%cosmo) $+ 15!
+  }
+  else {
+    if ($1) noticen 9 $+ $1 15não está Cadastrado no Bot!
+    else noticen Você precisa indicar um 9nick15 para verificar a aura, tipo assim 8@Aura nick
+  }
+}
+;; ----------------------------------------------------------------------------
+;; Alias :: aura
+;; Usado em group(!aura,@aura) e +aura
+;; ----------------------------------------------------------------------------
+alias aura {
+  var %nick = $1
+  var %x = 1
+  var %cosmo = $iif($2,$calc($dados(%nick,cosmo) * $dados(%nick,stamina) / 100),$dados(%nick,cosmo))
+  if (!%cosmo) %cosmo = $1
+  if ($prop = sentido) {
+    var %sentido
+    if (%cosmo isnum 0-2290000) %sentido = 6
+    elseif (%cosmo isnum 2290001-8710000) %sentido = 7
+    elseif (%cosmo isnum 8710001-500000000) %sentido = 8
+    else %sentido = 8
+    return %sentido
+  }
+  else {
+    var %lvs = 3001,10001,20001,30001,40001,50001,60001,70001,80001,100001,120001,140001,160001,180001,200001,220001,240001,260001,280001,300001,330001,360001,390001,420001,450001,480001,510001,540001,590001,640001,690001,740001,790001,840001,890001,940001,990001,1040001,1090001,1170001,1250001,1330001,1410001,1490001,1570001,1650001,1730001,1810001,1890001,1990001,2090001,2190001,2290001,2390001,2490001,2590001,2690001,2790001,2890001,3000001,3110001,3220001,3330001,3440001,3550001,3660001,3770001,3880001,3990001,4130001,4250001,4370001,4490001,4610001,4730001,4850001,4970001,5090001,5210001,5360001,5510001,5660001,5810001,5960001,6110001,6260001,6410001,6560001,6710001,6910001,7110001,7310001,7510001,7710001,7910001,8110001,8310001,8510001,8710001,9000001,10000001,11000001,12000001,13000001,14000001,15000001,20000001,30000001,50000001,100000001,200000001,500000001
+    if ($prop = lvl) return $gettok(%lvs,$1,44)
+    while (%cosmo >= $gettok(%lvs,%x,44)) && (%x <= 113) { inc %x }
+    if ($prop = x) {
+      return $iif(%x <= 100,%x $+ x,$replace(%x,101,Máxima,102,Máxima,103,Máxima,104,Extrema,105,Extrema,106,Extrema,107,Suprema,108,Suprema,109,Suprema,110,Divina,111,Divina,112,Divina,113,Divina))
+    }
+    else return %x
+  }
+}
+
+;;----
+;; Com Diff
+;; Comando estatistico, calcula a diferença entre os cosmos de dois usuário
+;; dvl, 1314833690
+;; ----
+
+alias com_chan_diff { /* i'm so fuckling lazy to do it */ }

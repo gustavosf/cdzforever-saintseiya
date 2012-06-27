@@ -1,0 +1,184 @@
+on *:chat:*: {
+  if $strip($1) = !no-trade {
+    reforma sega
+    id.check = | tokenize 32 $strip($1-)
+    if $hget($nick,trade) = 1 {
+      var %tnick = $hget($nick,trade.with)
+      msgtopo+ %tnick 
+      msgl+ %tnick 9Trade15: O usuário08 $nick 0recusou 15a operação
+      msgl+ %tnick ¯¯¯¯¯  de troca
+      msgbase+ %tnick
+      msgtopo | msgl 0Trade15: Você 4recusou 15a operação de 0troca15. | msgbase
+      hdel -w $nick trade* | hdel -w %tnick trade*
+      halt
+    }
+  }
+  if $strip($1) = !trade {
+    id.check =
+    reforma sega
+    tokenize 32 $strip($1-)
+    if !$hget($nick,trade) {
+      if $chat($2).status == active {
+        if !$hget($2,trade) { 
+          hadd -m $2 trade 1 | hadd -m $nick trade x
+          hadd $2 trade.with $nick | hadd -m $nick trade.with $2
+
+          msgtopo
+          msgl 9Trade15: Solicitação de operação de troca com o usuário
+          msgl ¯¯¯¯¯ 08 $2 15enviada. Aguarde a resposta.
+          msgbase
+          msgtopo+ $2
+          msgl+ $2 9Trade15: O usuário08 $nick 15está tentando efetuar
+          msgl+ $2 ¯¯¯¯¯  uma troca de itens com você.
+          msgl+ $2        Para 0aceitar15, digite09 !Trade
+          msgl+ $2        Para 0rejeitar15, digite09 !No-Trade
+          msgbase+ $2
+        }
+        else {
+          msgtopo
+          msgl 9Trade15: O usuário08 $2 15já esta trocando itens com
+          msgl ¯¯¯¯¯  algum outro usuário. Tente novamente mais tarde
+          msgbase
+        }
+      }
+      else {
+        msgtopo
+        if $2 {
+          msgl 9Trade15: Você precisa indicar um usuário para fazer 
+          msgl ¯¯¯¯¯  a troca de itens. Digite 11!Trade 0<11nick0> 15para
+          msgl        iniciar a troca.
+        }
+        else { msgl 9Trade15: O usuário08 $2 15não está conectado }
+        msgbase
+      }
+    }
+    if $hget($nick,trade) = x { msgtopo | msgl 9Trade15: Aguarde a confirmação do usuário | msgbase }
+    if $hget($nick,trade) = 1 {
+      var %tnick = $hget($nick,trade.with)
+
+      hadd $nick trade 2 | hadd %tnick trade 2
+      writeini $dados($nick) trade itens $replace($dados($nick,itens),$chr(44) $+ $chr(32),@)
+      writeini $dados(%tnick) trade itens $replace($dados(%tnick,itens),$chr(44) $+ $chr(32),@)
+      remini $dados($nick) trade troca | remini $dados(%tnick) trade troca
+
+      msgtopo | msgtopo+ %tnick
+      msgl 9Trade15: 0Confirmado | msgl+ %tnick 9Trade15: 9Confirmado
+      msgl ¯¯¯¯¯  Para 0adicionar14/0remover 15itens à troca, digite
+      msgl+ %tnick ¯¯¯¯¯  Para 0adicionar14/0remover 15itens à troca, digite
+      msgl         09!Trade ADD <item>
+      msgl+ %tnick         09!Trade ADD <item>
+      msgl         09!Trade DEL <item>
+      msgl+ %tnick         09!Trade DEL <item>
+      msgl | msgl+ %tnick
+      msgl        Para 0adicionar14/0remover 15dinheiro à troca digite
+      msgl+ %tnick        Para 0adicionar14/0remover 15dinheiro à troca digite
+      msgl         08!Trade ADD $chr(36) $+ <valor>
+      msgl+ %tnick         08!Trade ADD $chr(36) $+ <valor>
+      msgl         08!Trade DEL $chr(36) $+ <valor>
+      msgl+ %tnick         08!Trade DEL $chr(36) $+ <valor>
+      msgl | msgl+ %tnick
+      msgl Para 0cancelar 15a transação, digite 11!Trade CANCEL
+      msgl+ %tnick Para 0cancelar 15a transação, digite 11!Trade CANCEL
+      msgl Para 0finalizar 15a transação, digite 11!Trade OK
+      msgl+ %tnick Para 0finalizar 15a transação, digite 11!Trade OK
+      msgbase | msgbase+ %tnick
+    }
+    if $hget($nick,trade) = 2 {
+      if $2 = cancel {
+        var %tnick = $hget($nick,trade.with)
+        msgtopo+ %tnick 
+        msgl+ %tnick 9Trade15: O usuário08 $nick 0cancelou 15a operação
+        msgl+ %tnick ¯¯¯¯¯  de troca
+        msgbase+ %tnick
+        msgtopo | msgl 9Trade15: Você 4cancelou 15a operação de 0troca15. | msgbase
+        hdel -w $nick trade* | hdel -w %tnick trade*
+        halt
+      }
+      if $2 = add {
+        if ($3 == Peso) { msge Você 4não 15pode trocar 0pesos15, seu safadinho :) | halt }
+        var %it = $3-
+        if ($left(%it,1) = $chr(36)) {
+          %it = $remove($mid(%it,2-),.)
+          if (%it isnum 1-) {
+            if (%it <= $calc($dados($nick,dinheiro) - $hget($nick,trade.din))) {
+              hadd $nick trade.din $calc($hget($nick,trade.din) + %it)
+              msgl 0Trade15: Você adicionou08 $+($chr(36),$div(%it)) 15a troca.
+            }
+            else { msgl 0Trade15: Você 0não 15tem08 $+($chr(36),$div(%it)) 15de dinheiro para trocar }
+          }
+          else { msgl 0Trade15: Formato de 0Dinheiro 15inválido. }
+        }
+        else {
+          if $istok($readini($dados($nick),trade,itens),%it,64) {
+            writeini $dados($nick) trade troca $gettok($readini($dados($nick),trade,troca) $+ $chr(44) $+ %it,1-,44)
+            writeini $dados($nick) trade itens $remtok($readini($dados($nick),trade,itens),%it,1,64)
+            msgl 0Trade15: Adicionado item08 %it $+ 15.
+            msgl ¯¯¯¯¯  Itens atuais:08 $readini($dados($nick),trade,troca)
+          }
+          else { msgl 0Trade15: Você não tem o item08 %it 15no inventário. }
+        }
+      }
+      if $2 = del {
+        var %it = $3-
+        if $istok($readini($dados($nick),trade,troca),%it,64) {
+          writeini $dados($nick) trade troca $remtok($readini($dados($nick),trade,troca),%it,1,44)
+          writeini $dados($nick) trade itens $gettok($readini($dados($nick),trade,troca) $+ , $+ %it,1-,44)
+          msgl 0Trade15: Removido item08 %it $+ 15.
+          msgl ¯¯¯¯¯  Itens atuais:08 $readini($dados($nick),trade,troca)
+        }
+        else { msgl 0Trade15: Você não adicionou o item08 %it 15na troca. } 
+      }
+      if $2 = ok {
+        if $hget($hget($nick,trade.with),trade) = 3 {
+          var %tnick = $hget($nick,trade.with)
+          hadd $nick trade 4 | hadd %tnick trade 4
+          msgtopo
+          msgt 0Trade
+          msgt ¯¯¯¯¯
+          msgl 0 $+ $nick $+ 15:08 $iif(!$hget($nick,trade.din) && !$readini($dados($nick),trade,troca),Nada)
+          if $readini($dados($nick),trade,troca) { msgl Itens:08 $readini($dados($nick),trade,troca) }
+          if $hget($nick,trade.din) { msgl Dinheiro:08 $+($,$hget($nick,trade.din)) }
+          msgl
+          msgl 0 $+ %tnick $+ 15:08 $iif(!$hget(%tnick,trade.din) && !$readini($dados(%tnick),trade,troca),Nada)
+          if $readini($dados(%tnick),trade,troca) { msgl Itens:08 $readini($dados(%tnick),trade,troca) }
+          if $hget(%tnick,trade.din) { msgl Dinheiro:08 $+($,$hget(%tnick,trade.din)) }
+          msgt Para confirmar digite 08!Trade Complete
+          msgbase
+
+          msgtopo+ %tnick
+          msgt+ %tnick 0Trade
+          msgt+ %tnick ¯¯¯¯¯
+          msgl+ %tnick 0 $nick $+ 15:08 $iif(!$hget($nick,trade.din) && !$readini($dados($nick),trade,troca),Nada)
+          if $readini($dados($nick),trade,troca) { msgl+ %tnick Itens:08 $readini($dados($nick),trade,troca) }
+          if $hget($nick,trade.din) { msgl+ %tnick Dinheiro:08 $+($,$hget($nick,trade.din)) }
+          msgl+ %tnick
+          msgl+ %tnick 0 %tnick $+ 15:08 $iif(!$hget(%tnick,trade.din) && !$readini($dados(%tnick),trade,troca),Nada)
+          if $readini($dados(%tnick),trade,troca) { msgl+ %tnick Itens:08 $readini($dados(%tnick),trade,troca) }
+          if $hget(%tnick,trade.din) { msgl+ %tnick Dinheiro:08 $+($,$hget(%tnick,trade.din)) }
+          msgt+ %tnick Para confirmar digite 08!Trade Complete
+          msgbase+ %tnick
+        }
+        else {
+          hadd $nick trade 3
+          msgtopo
+          msgt 0Trade
+          msgt ¯¯¯¯¯
+          xmsgt Aguarde9 $hget($nick,trade.with) 15completar a operação de troca.
+          msgbase
+        }
+      }
+    }
+    if $hget($nick,trade) = 4 {
+      if $2 = cancel {
+        var %tnick = $hget($nick,trade.with)
+        msgtopo+ %tnick 
+        msgl+ %tnick 9Trade15: O usuário08 $nick 0cancelou 15a operação
+        msgl+ %tnick ¯¯¯¯¯  de troca
+        msgbase+ %tnick
+        msgtopo | msgl 9Trade15: Você 4cancelou 15a operação de 0troca15. | msgbase
+        hdel -w $nick trade* | hdel -w %tnick trade*
+        halt
+      }
+    }
+  }
+}

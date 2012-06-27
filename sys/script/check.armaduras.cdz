@@ -1,0 +1,143 @@
+;; ----------------------------------------------------------------------------
+;; Comando :: chat :: !Armaduras [tipo]
+;; Retorna informações sobre armaduras, lista dos mundos, entre outros
+;; Caso um segundo parâmetro seja utilizado, lista as armaduras daquele tipo
+;; Usa como [com_aux_arms.list] como auxiliar
+;; ----------------------------------------------------------------------------
+
+alias com_chat_!armaduras {
+  id.check =
+  if ($1) { com_aux_arms.list Qualquer $strip($1-) | return }
+  msgtopo 
+  msgt 15Seja Bem-Vindo14(9a14,1)15 à parte de 9Armaduras15 do SaintSeiya,
+  msgt 15Bot de lutas narradas do Canal 9#15Cdz0Fore15ver
+  msgdiv
+  msgt 15,1As Armaduras são divididas de acordo com os mundos14,
+  msgt 15,1que são:
+  msgt
+  msgl            9Sekai14:15 Mundo dos Homens.
+  msgl              9Kaikai14:15 Mundo das Águas.
+  msgl                9Meikai14:15 Mundo dos Mortos.
+  msgl                  9Makai14:15 Mundo dos Demônios.
+  msgl                    9Tenkai14:15 Mundo dos Céus.
+  msgdiv
+  msgl 9 .15Digite 9@0Sekai15 para ver as 9Armaduras15 do Sekai.
+  msgl 9 .15Digite 9@0Kaikai15 para ver as 9Armaduras15 do Kaikai.
+  msgl 9 .15Digite 9@0Meikai15 para ver as 9Armaduras15 do Meikai.
+  msgl 9 .15Digite 9@0Makai15 para ver as 9Armaduras15 do Makai.
+  msgl 9 .15Digite 9@0Tenkai15 para ver as 9Armaduras15 do Tenkai.
+  msgdiv
+  msgt 15Para ver as Armaduras Supremas, digite: 9@0Olimpo
+  msgdiv
+  msgt 15Para ver as classes das armaduras e a Aura necessária
+  msgt 15para acessar cada classe, digite: 9@0Classes Armaduras 
+  msgl
+  msgt 15Para ver as 9armaduras livres15, digite 9!0Livres <classe>
+  msgbase
+}
+
+alias com_aux_arms.list {
+  id.check =
+  var %tipo = $wildtok($arms.categorias,$2- $+ @*,1,44)
+  if (%tipo) {
+    var %mundo = $gettok(%tipo,2,64)
+    var %tipo = $gettok(%tipo,1,64)
+    msgtopo 
+    msgt 15Armaduras de0 %tipo $+ 15.
+    msgt 15Armaduras pertencentes ao11 %mundo $+ 15.
+    msgdiv
+    msgld Classe Armadura               Dono               Liberada
+    msgl
+    var %x = $ini($arms.path,0),%y = 0,%arm,%arml,%z = 0
+    while %y <= %x { 
+      dll.whilefix
+      %arm = $ini($arms.path,%y)
+      if ($arms.categoria(%arm) = %tipo) {
+        msgl $center( $+ $replace($arms.classe(%arm),S,11,A,8,B,9,C,7,D,4) $+ $arms.classe(%arm) $+ 0,6) $lefter($arms.nome(%arm),22) $lefter($iif($arms.dono(%arm) != Nenhum,0,14) $+ $v1 $+ ,18) $center($iif($arms.liberada(%arm),9,4) $+ $v1,8)
+        inc %z
+      }
+      inc %y
+    }
+    if (!%z) msgt 0Nenhuma Armadura Encontrada
+    else { msgl | msgtd Total de08 %z 0armaduras encontradas 15(00 $+ %z $+ 15/09 $+ $calc(%x - 1) $+ 15) }
+    msgdiv
+    msgt 15Para ver mais informações sobre uma armadura,
+    msgt 15digite 9!0Info7 <Armadura>
+    msgt 15Exemplo: 9!0Info7 %arml
+    msgt 15Para ver a Aura necessária para essa Classe,
+    msgt 15digite: 9@0Classes Armaduras15 e saiba se você possui
+    msgt 15nível para pegar uma armadura dessa seção. 
+    msgbase
+  }
+}
+
+;; ----------------------------------------------------------------------------
+;; Comando :: Chat :: group(@meikai,@sekai,@tenkai,@makai,@kaikai,@olimpo)
+;; Lista as categorias pertencentes a determinados mundos
+;; Usa como [com_aux_arms.categorias] como auxiliar
+;; ----------------------------------------------------------------------------
+
+alias com_chat_@meikai com_aux_arms.categorias Meikai
+alias com_chat_@sekai com_aux_arms.categorias Sekai
+alias com_chat_@tenkai com_aux_arms.categorias Tenkai
+alias com_chat_@makai com_aux_arms.categorias Makai
+alias com_chat_@kaikai com_aux_arms.categorias Kaikai
+alias com_chat_@olimpo com_aux_arms.categorias Olimpo
+alias com_aux_arms.categorias {
+  id.check =
+  msgtopo 
+  msgt 0Bem-Vindo14(9a14,1)15 a parte das 9Armaduras do  $+ $1 $+ 
+  msgdiv
+  if ($1 = meikai) { msgt 0Negras 9|0 Fantasmas II 9|0 Sapuris 9|0 Yumekai }
+  if ($1 = sekai) { msgt 0Aço 9|0 Bronze 9|0 Prata 9|0 Guerreiros Deuses I 9|0 Ouro }
+  if ($1 = kaikai) { msgt 0Fantasmas I 9|0 Guerreiros Deuses II 9|0 Marinas }
+  if ($1 = makai) { msgt 0Gigas 9|0 Anjos da Morte 9|0 Titãs }
+  if ($1 = tenkai) { msgt 0Berserkers 9|0 Coroa do Sol 9|0 Anjos Celestes }
+  if ($1 = olimpo) { msgt 0Kamuis 9|0 Elísios }
+  msgdiv 
+  msgt 15Para ver a lista de Armaduras de uma dessas categorias, digite: !Armaduras <categoria>
+  msgt 15Exemplo14:9 !0Armaduras11 Aço
+  msgbase
+}
+
+;; ----------------------------------------------------------------------------
+;; Comando :: Chat :: group(!masculino,!feminino)
+;; Lista as armaduras de determinado mundo
+;; ----------------------------------------------------------------------------
+
+alias com_chat_!masculino com_aux_armlist_deprecated
+alias com_chat_!feminino com_aux_armlist_deprecated
+alias com_aux_armlist_deprecated msge 0Este comando foi aposentado pois foi eliminada a segregação das armaduras por meio do sexo.¼ ¼Use: 8!Armaduras $iif($1,$1,<tipo>)
+
+;; ----------------------------------------------------------------------------
+;; Comando :: Chat :: @classes armaduras
+;; Lista as classes das armaduras
+;; ----------------------------------------------------------------------------
+
+alias com_chat_@classes { 
+  if ($1 != Armaduras) return
+  id.check = 
+  msgtopo
+  msgt Você entrou na seção de 0Classes das Armaduras
+  msgt As armaduras são divididas em classes:
+  msgdiv
+  msgt Classe S 14/9 Classe A 14/9 Classe B 14/9 Classe C 14/9 Classe D
+  msgdiv
+  msgt Cada Armadura possui uma classe diferente e cada classe
+  msgt precisa de uma certa aura para ser liberada, ou seja,
+  msgt você precisá alcançar uma certa aura necessária, para
+  msgt liberar seu acesso às armaduras de uma certa classe.
+  msgt
+  msgt A seguir, a lista das Classes e a aura necessária para
+  msgt a liberação da mesma:
+  msgdiv
+  msgt Classe S 14-0 Aura11 Divina0
+  msgt  Classe A 14-0 Aura11 54x0.
+  msgt  Classe B 14-0 Aura11 37x0.
+  msgt  Classe C 14-0 Aura11 15x0.
+  msgt  Classe D 14-0 Aura11 2x0.
+  msgdiv
+  msgt Para ver as Classes de uma Armadura, digite 
+  msgt 7!9Armaduras 15e siga as instruções.
+  msgbase
+}

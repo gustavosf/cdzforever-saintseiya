@@ -1,0 +1,629 @@
+alias -l wb writeini $path.banco $1-
+alias -l rb return $readini($path.banco,$1,$2)
+
+;; aliases de path
+alias path.banco return sys/banco.ini
+alias path.banco.operacoes return sys/banco.operacoes.txt
+
+;; extensão na classe user
+alias user.conta return $hget($nick,banco)
+alias user.banco return $dados($iif($1,$1,$nick),banco)
+alias user.banco.saldo return $banco.conta($iif($1,$1,$user.conta)).saldo
+alias user.banco.divida return $banco.conta($iif($1,$1,$user.conta)).emprestimo
+alias user.banco.limite return $banco.conta($iif($1,$1,$user.conta)).limite
+
+;; classe banco
+alias banco.conta.abrir {
+  var %x = $rand.num(5) $+ - $+ $rand.str(1)
+  while ($rb(%x,created)) %x = $rand.num(5) $+ - $+ $rand.str(1)
+  wb %x criada $ctime
+  wb %x saldo 0
+  wb %x emprestimo 0
+  wb %x dono $1
+  wb %x senha $rand.str(8)
+  wb %x status ativa
+  wb %x tipo usuário
+  w+ $1 banco 1
+  user.item.add $1 Cartão do BZ
+  memosend $1 Banco do Zodíaco O 11Banco do Zodíaco15 abriu uma conta no seu nome! Sua conta tem o número8 %x $+ 15, e está protegida com a senha8 $banco.conta(%x).senha $+ 15. Para acessá-la, digite 9!Banco %x $banco.conta(%x).senha $+ 15.
+  return %x
+}
+alias banco.saque wb $1 saldo $calc($banco.conta($1).saldo - $2)
+alias banco.deposito wb $1 saldo $calc($banco.conta($1).saldo + $2)
+alias banco.log {
+  var %code = $1 $+ $rand.str(5)
+  while ($read($path.banco.operacoes,s,%code)) %code = $1 $+ $rand.str(5)
+  write $path.banco.operacoes %code $1 $ctime $2 $3 $4 $5-
+  return %code
+}
+alias banco.emprestimo {
+  var %code = $banco.log(E,00000-A,$1,$2)
+  banco.deposito $1 $2
+  wb $1 emprestimo $calc($banco.conta($1).emprestimo + $2)
+  var %limite = $calc($iif($banco.conta($1).limite,$v1,$ctime) + $ceil($calc($2 / 1000)) * 86400)
+  wb $1 datalimite %limite
+  memosend $banco.conta($1).dono Banco do Zodíaco Foi feito um pedido de 0empréstimo de 8$ $+ $div($2) 15na sua conta de número11 $1 $+ 15, por9 $nick $+ 15. Você tem até o dia0 $date(%limite,dd) 15de0 $mes($date(%limite,m)) 15para quitar sua dívida atual de 4$ $+ $div($banco.conta($1).emprestimo) $+ 15.
+  return %code
+}
+alias banco.pagamento {
+  var %code = $banco.log(P,$1,00000-A,$2,$iif($2 == $banco.conta($1).emprestimo,Dívida quitada))
+  banco.saque $1 $2
+  wb $1 emprestimo $calc($banco.conta($1).emprestimo - $2)
+  if (!$banco.conta($1).emprestimo) remini $path.banco $1 datalimite
+  memosend $banco.conta($1).dono Banco do Zodíaco Foi feito um 0pagamento de empréstimo de 8$ $+ $div($2) 15na sua conta de número11 $1 $+ 15, por9 $nick $+ 15. $iif($banco.conta($1).limite,Você tem até o dia0 $date($v1,dd) 15de0 $mes($date($v1,m)) 15para quitar o restante da dívida $+ $chr(44) 4$ $+ $div($banco.conta($1).emprestimo) $+ 15.,Sua dívida está 9quitada15.)
+  return %code
+}
+
+alias banco.conta {
+  if ($prop == saldo) return $rb($1,saldo)
+  if ($prop == emprestimo) return $rb($1,emprestimo)
+  if ($prop == limite) return $rb($1,datalimite)
+  if ($prop == total) return $calc($rb($1,saldo) - $rb($1,emprestimo))
+  if ($prop == senha) return $rb($1,senha)
+  if ($prop == dono) return $iif($rb($1,dono),$v1,$1)
+  if ($prop == criada) return $rb($1,criada)
+  return $ini($path.banco,$1)
+}
+
+alias banco.transferencia {
+  var %code = $banco.log(T,$1,$2,$3,$4-)
+  banco.saque $1 $3
+  banco.deposito $2 $3
+  memosend $banco.conta($2).dono Banco do Zodíaco 9 $+ $banco.conta($1).dono 15lhe transferiu a quantia de8 $div($3) 15através do 0Banco do Zodíaco15 (Operação8 %code $+ 15). $iif($4,Observação:0 $4-)
+  return %code
+}
+
+alias banco.operacao {
+  var %o = $read($path.banco.operacoes,w,$1 *)
+  if ($prop == tipo) return $replacex($gettok(%o,2,32),T,Transferência,E,Empréstimo,P,Pagamento,D,Depósito,S,Saque)
+  if ($prop == data) return $gettok(%o,3,32)
+  if ($prop == de) return $gettok(%o,4,32)
+  if ($prop == para) return $gettok(%o,5,32)
+  if ($prop == valor) return $gettok(%o,6,32)
+  if ($prop == obs) return $gettok(%o,7-,32)
+  return %o
+}
+
+;; ----------------------------------------------------------------------------
+;; Alias :: banco.check
+;; Verifica se o usuário possui uma conta, caso não tenha emite mensagem de 
+;; erro e bloqueia o acesso (halt).
+;; ----------------------------------------------------------------------------
+alias banco.check if (!$user.conta) msgehalt Você 4não 15está logado em uma 0conta no banco15, e portanto 4não 15pode usar este comando!¼Para 0acessar uma conta15, digite 8!Banco <conta> <senha>
+
+;; ----------------------------------------------------------------------------
+;; Comando :: chat :: !banco
+;; Lista os comandos relativos ao banco do bot
+;; ----------------------------------------------------------------------------
+alias com_help_!banco return !Banco¼Chat¼!Banco¼Comando para acessar o Banco do bot do CdzForever, onde você poderá pedir empréstimos e transfeir dinheiro para outro usuário.
+alias com_chat_!banco {
+  reforma sega alchemist hyoga narak_ aurion xdvl
+  id.check =
+  var %conta = $hget($nick,banco)
+  if ($1) {
+    if (!$2) msgehalt Parâmetro 4faltando15! Você precisa digitar a 0senha 15da conta¼ ¼Uso: 9!Banco $1 <senha>
+    if (!$banco.conta($1)) msgehalt Conta 4invalida!¼ ¼Esta conta 0não 15consta no banco de dados do 11Banco do Zodíaco.
+    if ($banco.conta($1).senha !== $2) msgehalt Senha 4incorreta15!
+    hadd -m $nick banco $1
+    var %conta = $1
+    var %login = 1
+  }
+  elseif (!%conta) {
+    msgtopo
+    msgt SaintSeiya 14::0 Banco
+    msgt 0Seja Bem Vindo ao 9Banco do Zodíaco15:
+    msgdiv
+    msgt Caso você ainda 0não 15possua uma conta no 8Banco do Zodíaco $+ 15, digite 8@Abrir Conta15. Para tal, é necessário ter pelo menos 8aura 5x15, e11 5 mil méritos 15que serão consumidos na abertura da conta.
+    msgt
+    msgt Tendo uma conta, você pode efetuar 11depósitos15, 8saques15, 7transferências 15e0 empréstimos15.
+    msgt
+    msgtd
+    msgtd Caso você já tenha uma conta, digite
+    msgtd 9!Banco <conta> <senha>
+    msgtd
+  }
+  if (%conta) {
+    msgtopo
+    msgt SaintSeiya 14::0 Banco
+    msgt 0Seja Bem Vindo ao 9Banco do Zodíaco15:
+    msgdiv
+    if (%login) {   
+      msgtd
+      msgtd 9Você foi identificado com sucesso!
+      msgtd 
+      msgt
+    }
+    msgt Bem-Vindo8 $nick $+ 15 (conta9 %conta $+ 15),
+    msgt Abaixo o status da sua 0conta bancária
+    msgt
+    var %str = $max($len($div($user.banco.saldo)),$len($div($user.banco.divida)),$len($div($banco.conta(%conta).total)))
+    msgld       Saldo 14,1 $0 $righter($div($user.banco.saldo),%str) $+ ,00 0,14
+    msgld  Empréstimo 14,1 $4 $righter($div($user.banco.divida),%str) $+ ,00 0,14
+    msgld Saldo Total 14,1 $ $+ $iif($banco.conta(%conta).total >= 0,9,4) $righter($div($banco.conta(%conta).total),%str) $+ ,00 0,14
+    msgt
+    msgt 11Comandos do Banco
+    msgt
+    msgl 8     @Saldo 0,14 15,1 Verifica o seu saldo atual
+    msgl 8   @Extrato 0,14 15,1 Mostra as suas últimas movimentações
+    msgl 8@Empréstimo 0,14 15,1 Pega empréstimo junto ao banco
+  }
+  msgbase 
+}
+
+;; ----------------------------------------------------------------------------
+;; Comando :: chat :: @Abrir Conta
+;; Abre uma conta no banco do bot. Gera uma entrada no $path.banco.contas
+;; ----------------------------------------------------------------------------
+alias com_chat_@abrir {
+  if ($1 != conta) return
+  reforma sega alchemist hyoga narak_ aurion xdvl
+
+  ;if (!$user.banco && $user.meritos < 5000) msgehalt Você 4não 15tem a 0quantidade mínima de méritos 15para abrir uma conta! São necessários 085.000 Méritos 15para abrir uma conta no 0Banco do Zodíaco15.
+  ;if ($user.banco && $user.meritos < 60000) msgehalt Você 4não 15tem a 0quantidade mínima de méritos 15para abrir uma 9segunda conta15! São necessários 0860.000 Méritos 15para abrir uma outra conta no 0Banco do Zodíaco15.
+  if ($user.aura.abs < 5) msgehalt Você precisa ter 0pelo menos 8aura 5x 15para poder abrir uma conta no banco!
+
+  var %conta = $banco.conta.abrir($nick)
+
+  msgtopo
+  msgt SaintSeiya 14::0 Banco
+  msgt 0Seja Bem Vindo ao 9Banco do Zodíaco15:
+  msgdiv
+  msgt Você abriu a sua conta no Banco do Zodíaco!
+  msgt Os dados para acesso a sua conta são os seguintes:
+  msgt 
+  msgld                   Conta 8,1 %conta  0,14
+  msgld                   Senha 9,1 $banco.conta(%conta).senha 0,14
+  msgld                   Saldo 0,1 $0,00    0,14
+  msgt
+  msgt Para acessar a sua conta no banco, digite
+  msgt 9!Banco %conta $banco.conta(%conta).senha
+  msgt
+  msgtd 1Comandos do Banco
+  msgt
+  msgl 8     @Saldo 0,14 15,1 Verifica o seu saldo atual
+  msgl 8   @Extrato 0,14 15,1 Mostra as suas últimas movimentações
+  msgl 8@Empréstimo 0,14 15,1 Pega empréstimo junto ao banco
+  msgt
+  msgtd 1Comandos de Administração da Conta
+  msgt
+  msgl 8@Conta senha <nova_senha> 0,14 15,1 Troca a senha do banco
+  msgbase
+}
+
+;; ----------------------------------------------------------------------------
+;; Comando :: chat :: @saldo
+;; Retorna o saldo do usuário (dinheiro em mãos)
+;; ----------------------------------------------------------------------------
+alias com_chat_@saldo {
+  id.check =
+  reforma sega alchemist hyoga narak_ aurion xdvl
+  banco.check
+  msgtopo
+  msgt SaintSeiya 14::0 Banco
+  msgt 0Seja Bem Vindo ao 9Banco do Zodíaco15:
+  msgdiv
+  msgt Olá8 $nick $+ 15 (conta9 $user.conta $+ 15), seu saldo atual é de
+  msgt
+  msgt 8$ $+ $banco.conta($user.conta).saldo $+ ,00
+  msgbase
+}
+
+;; ----------------------------------------------------------------------------
+;; Comando :: chat :: @Depósito / @Depositar
+;; Deposita dinheiro na sua conta
+;; ----------------------------------------------------------------------------
+alias com_chat_@depositar com_chat_@depósito $1-
+alias com_chat_@deposito com_chat_@depósito $1-
+alias com_chat_@depósito {
+  reforma sega alchemist hyoga narak_ aurion xdvl
+  id.check =
+  banco.check
+
+  var %valor = $remove($1,.)
+  if (%valor == $null) msgehalt Parâmetro 4faltando15!¼ ¼Você precisa indicar o 0montante 15que deseja 0depositar15.¼ ¼Uso:9 @Depósito <9montante14>¼Ex: 8@Depósito 1000
+  if (%valor !isnum 1-) msgehalt Valor 4inválido15!¼Digite 0apenas o valor15, 0positivo15, sem vírgulas.
+  if ($user.dinheiro < %valor) msgehalt Você 4não 15tem 8$ $+ $div(%valor) 0para depositar 15na sua conta!
+
+  banco.deposito $user.conta %valor
+  user.dinheiro.retrieve %valor
+  var %code = $banco.log(D,$nick,$user.conta,%valor)
+
+  msgtopo
+  msgt SaintSeiya 14::0 Banco
+  msgt 0Seja Bem Vindo ao 9Banco do Zodíaco15:
+  msgdiv
+  msgt 15Você 0depositou 8$ $+ $div(%valor) 15na sua conta.
+  msgt
+  var %str = $maxlen($div($user.banco.saldo),$div(%valor),$div($calc($user.banco.saldo - %valor)))
+  msgld       Saldo 14,1 $0 $righter($div($calc($user.banco.saldo - %valor)),%str) $+ ,00 0,14
+  msgld    Depósito 14,1 $9 $righter($div(%valor),%str) $+ ,00 0,14
+  msgld Saldo Final 14,1 $11 $righter($div($user.banco.saldo),%str) $+ ,00 0,14
+  msgt
+  msgt 15O código desta operação é8  %code
+  msgbase
+}
+
+;; ----------------------------------------------------------------------------
+;; Comando :: chat :: @Saque / @Sacar
+;; Saca dinheiro da conta para o usuário
+;; ----------------------------------------------------------------------------
+alias com_chat_@sacar com_chat_@saque $1-
+alias com_chat_@saque {
+  reforma sega alchemist hyoga narak_ aurion xdvl
+  id.check =
+  banco.check
+
+  var %valor = $remove($1,.)
+  if (%valor == $null) msgehalt Parâmetro 4faltando15!¼ ¼Você precisa indicar o 0montante 15que deseja 0sacar15.¼ ¼Uso:9 @Saque <9montante14>¼Ex: 8@Saque 1000
+  if (%valor !isnum 1-) msgehalt Valor 4inválido15!¼Digite 0apenas o valor15, 0positivo15, sem vírgulas.
+  if ($user.banco.saldo < %valor) msgehalt Você 4não 15tem 8$ $+ $div(%valor) 0para sacar 15da sua conta!
+
+  banco.saque $user.conta %valor
+  user.dinheiro.add %valor
+  var %code = $banco.log(S,$user.conta,$nick,%valor)
+
+  msgtopo
+  msgt SaintSeiya 14::0 Banco
+  msgt 0Seja Bem Vindo ao 9Banco do Zodíaco15:
+  msgdiv
+  msgt 15Você 0sacou 8$ $+ $div(%valor) 15da sua conta.
+  msgt
+  var %str = $maxlen($div($user.banco.saldo),$div(%valor),$div($calc($user.banco.saldo + %valor)))
+  msgld       Saldo 14,1 $0 $righter($div($calc($user.banco.saldo + %valor)),%str) $+ ,00 0,14
+  msgld       Saque 14,1 $4 $righter($div(%valor),%str) $+ ,00 0,14
+  msgld Saldo Final 14,1 $11 $righter($div($user.banco.saldo),%str) $+ ,00 0,14
+  msgt
+  msgt 15O código desta operação é8 %code
+  msgbase
+}
+
+;; ----------------------------------------------------------------------------
+;; Comando :: chat :: @transferir
+;; Transfere dinheiro para outro usuário
+;; ----------------------------------------------------------------------------
+alias com_chat_@transferir {
+  id.check =
+  reforma sega alchemist hyoga narak_ aurion xdvl
+  banco.check
+
+  if (!$2) msgehalt Parâmetro 4faltando15!¼ ¼Você precisa indicar 0para quem 15você quer transferir dinheiro, e o 0montante total15.¼ ¼Uso:9 @Transferir 14<9conta14> <9montante14> [observação]¼Ex: 8@Transferir 12345-X 1000 pagamento de aposta
+  if (!$banco.conta($1)) msgehalt A conta0 $1 4não 15existe no 11Banco do Zodíaco15!
+  if ($1 == $user.conta) msgehalt Você 4não 15pode transferir valores para¼a 0sua própria conta15!
+  var %m = $remove($2,.,$)
+  if (%m !isnum) msgehalt Valor 4inválido15!¼Digite 0apenas o número15, sem vírgulas.
+  if (%m < 0) msgehalt Obviamente, você 4não15 pode transferir valores 0negativos15...
+  if (%m == 0) msgehalt Obviamente, você 4não 15pode transferir 0nada15...
+  if ($remove($banco.conta($user.conta).saldo,.) < %m) msgehalt Você 4não 15tem 8$ $+ $div(%m) 15para 0transferir 15a outro usuário.
+
+  var %code = $banco.transferencia($user.conta,$1,%m,$3-)
+
+  msgtopo
+  msgt SaintSeiya 14::0 Banco
+  msgt 0Seja Bem Vindo ao 9Banco do Zodíaco15:
+  msgdiv
+  msgt Transferência efetuada com sucesso!
+  msgt 
+  msgt 11 $+ $righter($nick,25) 14=>9 $lefter($banco.conta($1).dono,25)
+  msgt 14 $+ $righter($user.conta,25) 14  14 $lefter($1,25)
+  msgt Valor Transferido: 8$ $+ $div(%m)
+  msgt 
+  msgt Seu saldo atual é de 8$ $+ $banco.conta($user.conta).saldo
+  msgt
+  msgtd 15O código desta operação é1 %code
+  msgt
+  msgt Você pode verificar 0dados da transação 15em si através do comando 7@Operação %code
+  msgbase
+}
+
+;; ----------------------------------------------------------------------------
+;; Comando :: chat :: @Extrato
+;; Mostra as últimas movimentações da conta no banco
+;; ----------------------------------------------------------------------------
+alias com_chat_@extrato {
+  id.check =
+  reforma sega alchemist hyoga narak_ aurion xdvl
+  banco.check
+
+  msgtopo
+  msgt SaintSeiya 14::0 Banco
+  msgt 0Seja Bem Vindo ao 9Banco do Zodíaco15:
+  msgdiv
+
+  if ($window(@banco)) clear @banco
+  else window -hs @banco
+  filter -gfw sys/banco.operacoes.txt @banco .* $user.conta .*
+
+  var %t = $line(@banco,0),%i = %t,%l
+  msgt Extrato da conta9 $user.conta
+  msgt
+  msgld Data   Código      Tipo       Operação
+  msgt
+  while (%i) {
+    tokenize 32 $line(@banco,%i)
+    msgl 14 $+ $date($3,dd.mm) 0 $1 8 $center($replacex($2,T,Transferência,E,Empréstimo,P,Pagamento,D,Depósito,S,Saque),13) $iif($user.conta == $4, 4-$, 9+$) $+ $div($6) $iif($user.conta == $4,14=>15 $banco.conta($5).dono,14<=15 $banco.conta($4).dono)
+    dec %i
+  }
+  if (!%t) msgt Nenhuma operação identificada no período
+  window -c @banco
+  msgdiv
+  msgt Total de9 %t 15entradas
+  msgt
+  msgt Para ver 0informações adicionais 15de uma operação, digite7 @Operação <código>
+  msgbase
+}
+
+;; ----------------------------------------------------------------------------
+;; Comando :: chat :: @Operação
+;; Visualiza dados de uma operação no bot
+;; ----------------------------------------------------------------------------
+alias com_help_@Operação return @Operação¼Chat¼@Operação <código>¼Comando que visualiza dados de alguma operação bancária no Zodíaco.
+alias com_chat_@operacao com_chat_@operação $1-
+alias com_chat_@operaçao com_chat_@operação $1-
+alias com_chat_@operacão com_chat_@operação $1-
+alias com_chat_@operação {
+  reforma sega alchemist hyoga narak_ aurion xdvl
+  id.check =
+  banco.check
+  if (!$1) msgehalt Parâmetro 4Faltando15!¼ ¼Você precisa indicar 0qual operação 15você deseja visualizar.¼ ¼Uso: 8@Operação <código>
+  if (!$banco.operacao($1)) msgehalt Operação Inválida!
+  if ($oplv($nick) < 4 && $banco.operacao($1).de != $user.conta && $banco.operacao($1).para != $user.conta) msgehalt Você 4não 15tem acesso a informações desta operação!
+
+  msgtopo
+  msgt SaintSeiya 14::0 Banco
+  msgt 0Seja Bem Vindo ao 9Banco do Zodíaco15:
+  msgdiv
+  var %str = $max(20,$len($banco.operacao($1).tipo),$len($banco.conta($banco.operacao($1).de).dono xxxxxxxxx),$len($banco.conta($banco.operacao($1).para).dono xxxxxxxxx))
+  msgt Informações sobre a Operação8 $1 $+ 15:
+  msgt 
+  msgld        Operação 9,1 $lefter($banco.operacao($1).tipo,%str) 0,14
+  msgld            Data 15,1 $lefter($date($banco.operacao($1).data,dd/mm/yyyy hh:nn:ss),%str) 0,14
+  msgld              De 0,1 $lefter($banco.conta($banco.operacao($1).de).dono 15(14 $+ $banco.operacao($1).de $+ 15),%str) 0,14
+  msgld            Para 0,1 $lefter($banco.conta($banco.operacao($1).para).dono 15(14 $+ $banco.operacao($1).para $+ 15),%str) 0,14
+  msgld           Valor 0,1 $lefter(8$ $+ $div($banco.operacao($1).valor),%str) 0,14
+  msgt
+  msgt Observações:
+  msgt 8 $+ $iif($banco.operacao($1).obs,$v1,Sem Observações)
+  msgbase
+}
+
+;; ----------------------------------------------------------------------------
+;; Comando :: chat :: @Emprestimo
+;; Pega um empréstimo com o banco
+;; ----------------------------------------------------------------------------
+alias com_chat_@empréstimo com_chat_@emprestimo $1-
+alias com_chat_@emprestimo {
+  reforma sega alchemist hyoga narak_ aurion xdvl
+  id.check =
+  banco.check
+
+  var %valor = $remove($1,.)
+  var %max = $aura($banco.conta($user.conta).dono) * 1000
+  var %emprestimo = $banco.conta($user.conta).emprestimo
+
+  if (!%valor) msgehalt Parâmetro 4Faltando15.¼ ¼Você precisa indicar 0quanto 15de empréstimo deseja.¼ ¼8@Empréstimo <valor> ¼ Onde 0<valor>15 é um número positivo
+  if (%valor !isnum 1-) msgehalt O valor deve ser um número 8positivo15!
+  if (%valor > %max) msgehalt Você 4não 15pode pedir esta quantidade de dinheiro.¼Devido a sua 0limitação de cosmo15, você pode pedir no máximo 8$ $+ $div(%max) $+ 15.
+  if ($calc(%valor + %emprestimo) > %max) msgehalt Você 4não 15pode pedir esta quantidade de dinheiro.¼Devido a sua 0limitação de cosmo15, e aos 8$ $+ $div(%emprestimo) 15emprestados atualmente, você pode pedir no máximo 8$ $+ $div(%max) $+ 15.
+
+  hadd -m $nick emprestimo %valor
+
+  var %tempo = $ceil($calc(%valor / 1000)), %fim = $calc($iif($user.banco.limite,$v1,$ctime) + %tempo * 86400)
+
+  msgtopo
+  msgt SaintSeiya 14::0 Banco
+  msgt 0Seja Bem Vindo ao 9Banco do Zodíaco15:
+  msgdiv
+  msgtd Você está solicitando um 0empréstimo 15de 8$ $+ $div(%valor) $+ 15.
+  msgt
+  msgt O tempo estimado para que você pague a 9totalidade deste valor15, sem ter 0itens 15ou 0dinheiro 15confiscado é de08 %tempo $iif(%tempo == 1,dia,dias) $+ 15.
+  msgt
+  msgtd
+  msgtd 15No caso do 1não-pagamento 15do empréstimo até o dia11 $date(%fim,dd) 15de11 $mes($date(%fim,m)) $+ 15, seus ítens serão 0confiscados 15até a quitação da dívida.
+  msgtd
+  msgt
+  msgt Para 0confirmar 15os termos acima e fechar o empréstimo de 8$ $+ $div(%valor) $+ 15, digite 9@Fechar Empréstimo
+  msgbase
+}
+
+;; ----------------------------------------------------------------------------
+;; Comando :: chat :: @Fechar Empréstimo
+;; Fecha o empréstimo com o banco
+;; ----------------------------------------------------------------------------
+alias com_chat_@fechar {
+  reforma sega alchemist hyoga narak_ aurion xdvl
+  if ($1 != empréstimo && $1 != emprestimo) return
+  if (!$hget($nick,emprestimo)) return
+  id.check =
+  banco.check
+
+  var %valor = $hget($nick,emprestimo), %saldo = $user.banco.saldo
+  var %tempo = $ceil($calc(%valor / 1000)), %fim = $calc($ctime + %tempo * 86400)
+  var %code = $banco.emprestimo($user.conta,%valor)
+  var %max = $maxlen($div(%saldo),$div($user.banco.saldo),$div($user.banco.divida))
+  hdel $nick emprestimo
+
+  msgtopo
+  msgt SaintSeiya 14::0 Banco
+  msgt 0Seja Bem Vindo ao 9Banco do Zodíaco15:
+  msgdiv
+  msgt Você acaba de confirmar o 0empréstimo 15de 8$ $+ $div(%valor) $+ 15.
+  msgt
+  msgt Lembrando que você tem até o dia11 $date(%fim,dd) 15de11 $mes($date(%fim,m)) 15para efetuar o 0pagamento da dívida15, sob pena de ter ítens confiscados.
+  msgdiv
+  msgld Saldo Anterior: 14,1 $0 $righter($div(%saldo),%max) $+ ,00 0,14
+  msgld    Saldo Atual: 14,1 $8 $righter($div($user.banco.saldo),%max) $+ ,00 0,14
+  msgld         Dívida: 14,1 $4 $righter($div($user.banco.divida),%max) $+ ,00 0,14
+  msgt 
+  msgt O 0código 15desta operação é8 %code
+  msgbase
+}
+
+;; ----------------------------------------------------------------------------
+;; Comando :: chat :: @Pagar
+;; Paga dívida com o banco
+;; ----------------------------------------------------------------------------
+alias com_chat_@pagar {
+  reforma sega alchemist hyoga narak_ aurion xdvl
+  id.check =
+  banco.check
+
+  var %valor = $remove($1,.)
+  var %max = $user.banco.divida
+
+  if (!%valor) msgehalt Parâmetro 4Faltando15.¼ ¼Você precisa indicar 0quanto 15da dívida deseja pagar.¼ ¼8@Pagar <valor> ¼ Onde 0<valor>15 é um número positivo
+  if (%valor !isnum 1-) msgehalt O valor deve ser um número 8positivo15!
+  if (%valor > $user.banco.saldo) msgehalt Você 4não 15pode pagar esta quantidade de dinheiro.¼O seu saldo no banco é de 8$ $+ $div($user.banco.saldo) $+ 15.
+  if (%valor > %max) msgehalt Você 4não 15pode pagar esta quantidade de dinheiro.¼A sua dívida é de 8$ $+ $div($max) $+ 15.
+
+  var %saldo = $user.banco.saldo
+  var %code = $banco.pagamento($user.conta,%valor)
+  var %max = $maxlen($div(%saldo),$div($user.banco.saldo),$div($user.banco.divida))
+
+  msgtopo
+  msgt SaintSeiya 14::0 Banco
+  msgt 0Seja Bem Vindo ao 9Banco do Zodíaco15:
+  msgdiv
+  msgt Você acaba de efetuar um 0pagamento 15de dívida no valor de 8$ $+ $div(%valor) 15ao 11Banco do Zodíaco15.
+  msgt
+  if ($user.banco.divida) {
+    msgt Com isto, a sua dívida caiu para 4$ $+ $div($v1) $+ 15.
+    !msgt Você tem até o dia11 $date($user.banco.limite,dd) 15de11 $mes($date($user.banco.limite,m)) 15para pagar o resto do montante, sob pena de 0ter os ítens confiscados15.
+  }
+  else msgt 9Com isto você quitou a sua dívida com o banco.
+  msgdiv
+  msgld Saldo Anterior: 14,1 $0 $righter($div(%saldo),%max) $+ ,00 0,14
+  msgld    Saldo Atual: 14,1 $8 $righter($div($user.banco.saldo),%max) $+ ,00 0,14
+  msgld         Dívida: 14,1 $4 $righter($div($user.banco.divida),%max) $+ ,00 0,14
+  msgt 
+  msgt O 0código 15desta operação é8 %code
+  msgbase
+}
+
+;; ----------------------------------------------------------------------------
+;; Comando :: chat :: @Conta <operação>
+;; Altera dados da conta
+;; ----------------------------------------------------------------------------
+alias com_chat_@conta {
+  reforma sega alchemist hyoga narak_ aurion xdvl
+  id.check = 
+  banco.check
+
+  msgtopo
+  msgt SaintSeiya 14::0 Banco
+  msgt 0Seja Bem Vindo ao 9Banco do Zodíaco15:
+  msgdiv
+
+  if ($1 == senha) {
+    if ($2) { 
+      wb $user.conta senha $2
+      memosend $banco.conta($user.conta).dono Banco do Zodíaco 8 $+ $iif($banco.conta($user.conta).dono == $nick,Você,$v1) 15alterou a senha da sua conta de número9 $user.conta $+ 15. Sua nova senha é11 $2 $+ 15.
+      msgt Você 9alterou 15a sua 0senha. Guarde-a com carinho.
+      msgt
+      msgt 14Nova Senha
+      msgtd 0,1  $+ $2 $+  0,14
+    }
+    else {
+      msgt Você precisa digitar uma 8nova senha 15para concluir esta operação!
+      msgt
+      msgt Ex: 9@Conta Senha novasenha
+    }
+  }
+  else {
+    msgt Você precisa escolher uma 8operação 15par executar.
+    msgt
+    msgt Atualmente, a única operação de conta disponível é a 0troca de senha15.
+    msgt 
+    msgt Para tal, digite 8@Conta Senha <novasenha>
+  }
+  msgbase
+}
+
+;; ----------------------------------------------------------------------------
+;; Callback :: chat :: Cartão do BZ
+;; Lista as contas associadas a um determinado nick, do dono do cartão
+;; ----------------------------------------------------------------------------
+alias cb.banco.cartao {
+  if ($1) {
+    ;; @Usar Cartão do BZ >> <conta>
+    if (!$banco.conta($1)) msgehalt 0Acesso Negado¼ ¼Conta de número9 $1 15não existe.
+    if ($banco.conta($1).dono != $nick) msgehalt 0Acesso Negado¼ ¼Você 4não 15conseguiu acessar a conta de número9 $1 15com este cartão.
+    com_chat_!banco $1 $banco.conta($1).senha 
+    return 
+  }
+
+  msgtopo
+  var %i = $ini($path.banco,0),%c
+  while (%i) {
+    %c = $ini($path.banco,%i)
+    if ($rb(%c,dono) == $nick) msgt Conta09 %c 15aberta em11 $date($rb(%c,criada),dd/mm/yyyy)
+    dec %i
+  }
+  msgbase
+}
+
+
+;; ----------------------------------------------------------------------------
+;; Signal :: nick_change
+;; Altera o nick do dono da conta no registro do banco
+;; ----------------------------------------------------------------------------
+on *:signal:nick_change:{
+  ;; $1 = nick, $2 = newnick
+  var %i = $ini($path.banco,0),%c
+  while (%i) {
+    %c = $ini($path.banco,%i)
+    if ($rb(%c,dono) == $1) wb %c dono $2
+    dec %i
+  }
+}
+
+;; ----------------------------------------------------------------------------
+;; Signal :: close_chat
+;; Limpa os dados da sessão do banco
+;; ----------------------------------------------------------------------------
+on *:signal:close_chat:{
+  if ($hget($1)) {
+    hdel $1 banco
+    hdel $1 emprestimo
+  }
+}
+
+;; ----------------------------------------------------------------------------
+;; Signal :: user_login
+;; Verifica se o usuário tem dívidas pendentes e confisca ítens caso tenha
+;; ----------------------------------------------------------------------------
+on *:signal:user_login: {
+  // falta programar :)
+}
+
+
+
+alias com_chat_@transferirold {
+  id.check =
+  var %nick = $dados($2,nick),%valor = $1
+  if $2 {
+    if ($2 != $nick) {
+      if (!$dados($nick,divida)) { 
+        if ($1 isnum) { 
+          var %din = $remove($1,.) 
+          if ($dados($nick,dinheiro) >= %din) && (%din >= 0) {
+            if ($dados($2,nick)) { 
+              write sys/logs/transferir.log $date $time $nick transferiu $ $+ $div(%din) para $2
+              w+ $2 dinheiro $calc($dados($2,dinheiro) + %din)
+              w+ $nick dinheiro $calc($dados($nick,dinheiro) - %din)
+              msg =$nick $c1 Transferência 0concluida15. $c2
+              msg =$nick $c1 Você transferiu08 $chr(36) $+ 00 $+ $div(%din) 15para o usuário09 $2 $+ 15. $c2
+              if ($2 ison #CdzForever ) msgto $2 9 $+ $nick 15acabou de transferir08 $chr(36) $+ 00 $+ $div(%din) 15para sua conta.
+              else memosend $2 Banco $nick lhe transferiu a quantia de $div(%din) através do banco do SaintSeiya
+            }
+            else msge 00 $+ $2 15não está registrado em nosso sistema.
+          }
+          else msge Você não tem dinheiro suficiente.
+        }
+        else msge Use Somente Números!
+      }
+      else msge Você não pode Transferir dinheiro, pois possui dívida com o banco.
+    }
+    else msge Você não pode transferir dinheiro para si mesmo.¼0Use a cabeça.
+  }
+  else msge O comando que deve ser digitado, é 7@9transfeirir <valor> <nick>
+}

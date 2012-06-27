@@ -1,0 +1,54 @@
+alias com_chan_@passar {
+  if ($chan != #cdzforever) return
+  if ($1 == chimarrão || $1 == chimarrao) {
+    if ($nick == %chimarrao.com) {
+      if ($2 ison #cdzforever) {
+        if (%chimarrao.agua < 5) {
+          %chimarrao.com = $2
+          msgto #cdzforever 08 $+ $nick 15passa o mate para o9 $2 $+ 15.
+        }
+        else noticen 0Tu não tens mais água para o chimarrão15. Para preparares outro, digite 8@Preparar Chimarrão 15(14é necessário o ítem "Chimarrão"15).
+      }
+      else noticen O0 gaudério8 $2 15não está na praça no momento!
+    }
+    else noticen Tu 4não 15estás com o 9chimarrão 15no momento!
+  }
+}
+
+alias com_chan_@tomar {
+  if ($chan != #cdzforever) return
+  echo -a $1-
+  if ($1 == chimarrão || $1 == chimarrao) {
+    if (%chimarrao.com == $nick) {
+      if ($user.vigor > 0) {
+        if (%chimarrao.ultimo != $nick) {
+          inc %chimarrao.agua
+          %chimarrao.ultimo = $nick
+          if ($dados($nick,nick)) {
+            user.vigor.add 5
+            var %msg = $chr(44) recuperando08 5 de vigor
+          }
+          var %r = $r(1,2)
+          if (%r == 1) msgto #cdzforever 09 $+ $nick 15tomou um gole do delicioso mate gaúcho $+ %msg $+ 15.0 A cuia está vazia.
+          if (%r == 2) msgto #cdzforever 09 $+ $nick 15toma o chimarrão até roncar $+ %msg $+ 15.0 A cuia está vazia.
+        }
+        else noticen Você acabou de sorver um! 0Chimarrão é para ser tomado em roda! 15Passe-o para outra pessoa (9@Passar chimarrão <nick>15)
+      }
+      else Você está 4morto! Não pode tomar 9chimarrão15! Volte pra sua 14catacumba15.
+    }
+    else noticen 8Epa15! O chimarrão 9não 15tá contigo!
+  }
+}
+
+alias com_chan_@preparar {
+  if ($chan != #cdzforever) return
+  if ($1 == chimarrão || $1 == chimarrao) {
+    if ($user.item.has($nick,Chimarrão)) {
+      user.item.consume $nick Chimarrão
+      %chimarrao.com = $nick
+      %chimarrao.agua = 0
+      msgto #cdzforever 08 $+ $nick 15preparou um 9chimarrão 15para matear com a peãozada.
+    }
+    else noticen Tu não possuis o ítem 8Chimarrão15!
+  }
+}

@@ -1,0 +1,44 @@
+;; Comandos para adicionar/remover itens do usuário :D
+;; P: Operador, Admin
+;; !AddItem <nick> <item>
+;; !DelItem <nick> <item>
+
+on *:text:*:*: {
+  if ($strip($1) = !AddItem) {
+    op.check !
+    noticen Comando 8desativado
+    halt
+    if ($3) {
+      if $dados($2,nick) {
+        var %item = $loja($3-,nome)
+        if %item {
+          w+ $2 itens $iif($dados($2,itens) != Nenhum,$dados($2,itens) $+ $chr(44)) $gettok(%item,1,188)
+          write $logs(adddelitem) $date $time $chr(124) Adicionado $gettok(%item,1,188) ao usuário $2 pelo operador $nick
+          .msg #CdzForever $c1 Inclusão de itens realizada com sucesso por9 $nick $+ $c2
+          .msg #CdzForever $c1 Os Itens de9 $2 15agora são:8 $dados($2,itens) $+ 0. $c2
+        }
+        else { .notice $nick $c1 O ítem 14"08 $+ $3- $+ 14" 4não 15existe, e não pode ser adicionado nos dados de09 $2 $c2 }
+      }
+      else { .notice $nick $c1 O usuário 14"08 $+ $2 $+ 14" 4não 15está cadastrado no bot, e portanto não pode receber o item $c2 }
+    }
+    else { .notice $nick $c1 Parâmetro 4faltando15. Use: 9!AddItem 14<0nick14> <0item14> / 0Ex8: 9!AddItem Alchemist Poção de Cosmos }
+  }
+  if ($strip($1) = !DelItem) {
+    op.check !
+    noticen Comando 8desativado
+    halt
+    if ($3) {
+      if $dados($2,nick) {
+        if $istok($dados($2,itens),$chr(32) $+ $3-,44) {
+          w+ $2 itens $remtok($dados($2,itens),$chr(32) $+ $2-,1,44)
+          write $logs(adddelitem) $date $time $chr(124) Retirado $3- ao usuário $2 pelo operador $nick
+          .msg #Cdzforever $c1 Remoção do item15 $3- 0de9 $2 0foi concluída com sucesso! $c2
+          .msg #Cdzforever $c1 Os itens remanescentes de09 $2 15são:08 $dados($2,itens) $c2
+        }
+        else { .notice $nick $c1 O ítem 14"08 $+ $3- $+ 14" 4não 15consta nos dados de09 $2 $c2 }
+      }
+      else { .notice $nick $c1 O usuário 14"08 $+ $2 $+ 14" 4não 15está cadastrado no bot, e portanto não pode ter um item removido. $c2 }
+    }
+    else { .notice $nick $c1 Parâmetro 4faltando15. Use: 9!DelItem 14<0nick14> <0item14> / 0Ex8: 9!DelItem Alchemist Poção de Cosmos }
+  }
+}

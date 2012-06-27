@@ -1,0 +1,6 @@
+logs/*
+users/*
+users2/*
+sys/*.txt
+*.log
+*.db

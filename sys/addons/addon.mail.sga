@@ -1,0 +1,19 @@
+;; ----------------------------------------------------------------------------
+;; Addon :: mail.send
+;; Envia um e-mail para um determinado usuário do canal
+;; Pega o email do usuário do banco de dados do próprio usuário
+;; Necessita cadastrar um 'tipo_email' direto no arquivo mailer.php no site
+;; ----------------------------------------------------------------------------
+;; Uso: /mail.send nick tipo_email queryvars
+;; ----------------------------------------------------------------------------
+alias mail.send {
+  var %m = $+(mailer.,$r(11111,99999))
+  while ($sock(%m)) %m = $+(mailer.,$r(11111,99999))
+  sockopen %m cdzforever.net 80
+  sockmark %m $+(e=,$user.perfil.email($1),&n=,$1,&t=,$2,&,$3-)
+}
+on *:sockopen:mailer.*:{
+  sockwrite -nt $sockname GET /mailer/mailer.php? $+ $sock($sockname).mark HTTP/1.1
+  sockwrite -nt $sockname Host: cdzforever.net
+  sockwrite -nt $sockname
+}

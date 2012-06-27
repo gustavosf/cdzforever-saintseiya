@@ -1,0 +1,150 @@
+on *:chat:*: {
+  if $strip($1) == !Buscarluta {
+    id.check = 
+    op.check @ =
+    if $2 {
+      var %regex = ( $+ $replace($2-,$chr(32),$chr(124)) $+ )
+      var %regex = /(( $+ %regex     .*)|(Vencedor: %regex .*)|(Perdedor: %regex .*)|(Narrador: %regex .*)){ $+ $numtok($2-,32) $+ }/i)
+      msgtopo
+      msgt 0Buscando ocorrencias para | msgt 14-08 $replace($2-,$chr(32),+) 14- | msgt
+      window -c @buscarlutas | window -h @buscarlutas
+      %luta = $read($lutas.path,r,%regex)
+      while (%luta) { aline @buscarlutas %luta | %luta = $read($lutas.path,r,%regex,$calc($readn + 1)) }
+      var %x = $line(@buscarlutas,0),%i = 5,%z = $line(@buscarlutas,0)
+      while (%x && %i) {
+        var %l2 = $line(@buscarlutas,%x)
+        msgt Luta09 $gettok(%l2,1,32) 14-15 Em00 $gettok(%l2,17,32) 15ás00 $gettok(%l2,19,32)
+        msgt 00 $+ $replace($gettok(%l2,4,32),$chr(44),14 $+ $chr(44) $+ 00) 15vs00 $replace($gettok(%l2,7,32),$chr(44),14 $+ $chr(44) $+ 00)
+        msgt Narrada por08 $gettok(%l2,10,32)
+        msgdiv
+        dec %x | dec %i
+      }
+      if %z != 0 {
+        msgt Foram encontrados08 %z 15combates
+        msgt Para cancelar um combate, digite 11!CancalarLuta 14<0id14>
+        msgt Ex: 11!CancelarLuta 0D-374580
+        if %z > 5 { msgt Para pegar a lista 8completa15, digite 11!PegarLutas }
+      }
+      else { msgt 9Nenhum15 combate encontrado }
+      msgbase
+    }
+    else { msgtopo | msgt Parâmetro 0Faltando15! | msgt Uso: 11!BuscarLuta 14<0Nick114> [<0Nick214> <0Nick314>] | msgbase }
+  }
+  if $strip($1) == !pegarlutas {
+    id.check =
+    op.check @ =
+    dcc send $nick $lutas.path
+    msgtopo | msgt Enviando a 9lista completa 15de lutas do canal | msgbase 
+  }
+  if $strip($1) == !Cancelarluta {
+    id.check =
+    op.check @ =
+    if !$hget(cancelarluta) { 
+      if $2 {
+        var %luta = $read($lutas.path,w,$strip($2) $+ *)
+        if %luta {
+          hadd -m cancelarluta luta %luta
+          hadd cancelarluta por $nick
+          hadd cancelarluta id $strip($2)
+          hadd cancelarluta tipo $gettok(%luta,1,45)
+          hadd cancelarluta p1 $gettok(%luta,4,32)
+          hadd cancelarluta p2 $gettok(%luta,7,32)
+          hadd cancelarluta n $gettok(%luta,10,32)
+          hadd cancelarluta em $gettok(%luta,17,32) $gettok(%luta,19,32) 
+          msgtopo
+          msgt 0Cancelar Combate
+          msgt ¯¯¯¯¯¯¯¯ ¯¯¯¯¯¯¯
+          msgt Você deseja 0cancelar 15o combate09 $replacex($left(%luta,1),f,Fácil,m,Média,d,Difícil,w,WO,e,Empate) 09 $+ $gettok(%luta,1,32) 15entre
+          msgdiv
+          msgt 00 $+ $replace($hget(cancelarluta,p1),$chr(44),14 $+ $chr(44) $+ 00)
+          msgt vs
+          msgt 00 $+ $replace($hget(cancelarluta,p2),$chr(44),14 $+ $chr(44) $+ 00)
+          msgt Realizada em08 $gettok($hget(cancelarluta,em),1,32) 15ás08 $gettok($hget(cancelarluta,em),2,32) $+ 14.
+          msgdiv
+          msgt Para 0confirmar15, digite 08!Sim
+          msgt Você tem 0820 segundos 15para confirmar
+          msgbase
+          .timercancelarluta 1 20 hfree cancelarluta
+        }
+        else { msgtopo | msgt Combate de 0ID09 $strip($2) 15não encontrado14! | msgbase }
+      }
+      else { msgtopo | msgt Parâmetro 9Faltando14! | msgt Use: 8!CancelarLuta 14<0ID14> | msgbase }
+    }
+    else { msgtopo | msgt Já está acontecendo um 8cancelamento 15de combate. | msgt Tente novamente mais tarde. | msgbase }
+  }
+  if $strip($1) == !sim {
+    if $hget(cancelarluta) {
+      if $hget(cancelarluta,por) == $nick {
+        .timercancelarluta off
+        var %p1 = $hget(cancelarluta,p1),%p2 = $hget(cancelarluta,p2),%n = $hget(cancelarluta,n)
+        var %dif = $calc($numtok(%p2,44) - $numtok(%p1,44))
+        if %dif > 0 {
+          var %bonus = $calc(%dif * 100),%bonusd = $calc(%dif * 200)
+          if %tipo = E { var %bns = $int($calc(200 / %dif)),%bnsd = $int($calc(300 / %dif)) }
+          else { var %bns = $int($calc(100 / (%dif * 2))),%bnsd = $int($calc(200 / (%dif * 2))) }
+        }
+        if %dif = 0 {
+          %dif = $calc((($numtok($3,44) + $numtok($2,44)) - 2) / 2)
+          var %bonus = $calc(%dif * 100),%bonusd = $calc(%dif * 200)
+          if %tipo = E { var %bns = $calc(%dif * 100),%bnsd= $calc(%dif * 200) }
+          else { var %bns = $calc(%dif * 50),%bnsd = $calc(%dif * 100) }
+        }
+        if %dif < 0 {
+          %dif = $abs(%dif)
+          var %bonus = $abs($calc(%dif * 50)),%bonusd = $abs($calc(%dif * 100))
+          if %tipo = E { var %bns = $abs($calc(%dif * 100)),%bnsd = $abs($calc(%dif * 200)) }
+          else { var %bns = $abs($calc(%dif * 25)),%bnsd = $abs($calc(%dif * 50)) }
+        }
+        var %c1 = $calc($replace($hget(cancelarluta,tipo),D,500,M,400,F,300,E,250,WO,150) + %bonus)
+        var %c2 = $calc($replace($hget(cancelarluta,tipo),D,400,M,300,F,200,E,250,WO,0) + %bns)
+        var %d1 = $calc($replace($hget(cancelarluta,tipo),D,1000,M,800,F,400,E,350,WO,300) + %bonusd)
+        var %d2 = $calc($replace($hget(cancelarluta,tipo),D,800,M,600,F,200,E,350,WO,0) + %bnsd)
+        var %d3 = $calc($replace($hget(cancelarluta,tipo),D,2000,M,1000,F,500,E,2000,WO,350) + (100 * ($numtok(%p1,44) + $numtok(%p2,44) - 2)))
+        var %x = 1
+        var %s = $ctime($gettok($hget(cancelarluta,em),1,32)),%s1
+        if $date(%s,d) isnum 1-7 { %s = S1M $+ $date(%s,m) $+ A $+ $date(%s,yy) }
+        elseif $date(%s,d) isnum 8-14 { %s = S2M $+ $date(%s,m) $+ A $+ $date(%s,yy) }
+        elseif $date(%s,d) isnum 15-21 { %s = S3M $+ $date(%s,m) $+ A $+ $date(%s,yy) }
+        elseif $date(%s,d) isnum 22- { %s = S4M $+ $date(%s,m) $+ A $+ $date(%s,yy) }
+        while %x <= $numtok(%p1,44) {
+          %px = $gettok(%p1,%x,44)
+          if $dados(%px,nick) {
+            ;;echo -a %s / %px
+            writeini $dados(%px) %px cosmo $calc($dados(%px,cosmo) - %c1) | writeini $dados(%px) %px dinheiro $calc($dados(%px,dinheiro) - %d1)
+            writeini $dados(%px) historico $iif($hget(cancelarluta,tipo) = E,empates,vitorias) $calc($dados(%px,historico,$iif($hget(cancelarluta,tipo) = E,empates,vitorias)) - 1)
+            %s1 = $readini(semana.ini,%s,%px)
+            %s1 = $puttok(%s1,$calc($gettok(%s1,1,58) - $iif($hget(cancelarluta,tipo) = E,2,3)),1,58)
+            %s1 = $puttok(%s1,$calc($gettok(%s1,$iif($hget(cancelarluta,tipo) = E,4,2),58) - 1),$iif($hget(cancelarluta,tipo) = E,4,2),58)
+            writeini -n semana.ini %s %px %s1
+            inc %x
+          }
+        }
+        %x = 1
+        while %x <= $numtok(%p2,44) {
+          %px = $gettok(%p2,%x,44)
+          if $dados(%px,nick) { 
+            writeini $dados(%px) %px cosmo $calc($dados(%px,cosmo) - %c2) | writeini $dados(%px) %px dinheiro $calc($dados(%px,dinheiro) - %d2)
+            writeini $dados(%px) historico $iif($hget(cancelarluta,tipo) = E,empates,derrotas) $calc($dados(%px,historico,$iif($hget(cancelarluta,tipo) = E,empates,derrotas)) - 1)
+            %s1 = $readini(semana.ini,%s,%px)
+            %s1 = $puttok(%s1,$calc($gettok(%s1,1,58) - $iif($hget(cancelarluta,tipo) = E,2,1)),1,58)
+            %s1 = $puttok(%s1,$calc($gettok(%s1,$iif($hget(cancelarluta,tipo) = E,4,5),58) - 1),$iif($hget(cancelarluta,tipo) = E,4,5),58)
+            writeini -n semana.ini %s %px %s1
+            inc %x
+          }
+        }
+        writeini $dados(%n) %n dinheiro $calc($dados(%n,dinheiro) - %d3) 
+        writeini $dados(%n) %n historico narradas $calc($dados(%n,historico,narradas) - 1)
+        %s1 = $readini(semana.ini,%s,%n)
+        %s1 = $puttok(%s1,$calc($gettok(%s1,3,58) - 1),3,58)
+        %s1 = $puttok(%s1,$calc($gettok(%s1,1,58) - 2),1,58)
+        writeini -n semana.ini %s %n %s1
+        msg #Cdzforever 0,1 0,14 08,1 $nick $+ 14, 15o combate $replacex($hget(cancelarluta,tipo),f,Fácil,m,Médio,d,Difícil,wo,WO,E,Empate) 15entre00 $replace(%p1,$chr(44),14 $+ $chr(44) $+ 00) 15e0 $replace(%p2,$chr(44),14 $+ $chr(44) $+ 00) $+ 15, Narrada por00 $hget(cancelarluta,n) $+ 15, Realizada em08 $gettok($hget(cancelarluta,em),1,32) 15ás08 $gettok($hget(cancelarluta,em),2,32) 15foi 0cancelado 15com sucesso14! 0,14 0,1 
+        write $+(-dw,$hget(cancelarluta,id),*) $lutas.path 
+        msgtopo | msgt Combate 0ID09 $hget(cancelarluta,id) 15cancelado14! | msgbase
+        hfree cancelarluta
+      }
+      else { msgtopo | msgt Um 9cancelamento 15está sendo feito por outro 0operador14. | msgt Aguarde a sua vez :D | msgbase }
+    }
+    else { msgtopo | msgt Nenhum cancelamento de combate está aguardando | msgt 9confirmação | msgbase }
+  }
+}

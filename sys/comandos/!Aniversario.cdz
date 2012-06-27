@@ -1,0 +1,101 @@
+alias signo {
+  tokenize 47 $user.perfil.nascimento($iif($1,$1,$nick))
+  if ($2 = 1) { if ($1 isnum 1-20) return Capricórnio | else return Aquário }
+  if ($2 = 2) { if ($1 isnum 1-19) return Aquário | else return Peixes }
+  if ($2 = 3) { if ($1 isnum 1-20) return Peixes | else return Áries }
+  if ($2 = 4) { if ($1 isnum 1-20) return Áries | else return Touro }
+  if ($2 = 5) { if ($1 isnum 1-20) return Touro | else return Gêmeos }
+  if ($2 = 6) { if ($1 isnum 1-20) return Gêmeos | else return Câncer }
+  if ($2 = 7) { if ($1 isnum 1-21) return Câncer | else return Leão }
+  if ($2 = 8) { if ($1 isnum 1-22) return Leão | else return Virgem }
+  if ($2 = 9) { if ($1 isnum 1-22) return Virgem | else return Libra }
+  if ($2 = 10) { if ($1 isnum 1-22) return Libra | else return Escorpião }
+  if ($2 = 11) { if ($1 isnum 1-21) return Escorpião | else return Sagitário }
+  if ($2 = 12) { if ($1 isnum 1-21) return Sagitário | else return Capricórnio }
+}
+on *:chat:*:{
+  if ($strip($1-) = !aniversários) || ($strip($1-) = !aniversarios) || ($strip($1-) = !aniver) || ($strip($1-) = !anivers) {
+    if ($calc($ctime - %anivers) > 1800) || !$window(@anivers) {
+      set %anivers $ctime
+      var %x = 1,%y = 0,%f = $findfile(users/,*.ini,1),%m,%n,%mes = $date(m),%ano = $date(yyyy)
+      if ($window(@anivers)) clear @anivers
+      else window -hs @anivers
+      while %f {
+        dll.whilefix
+        %n = $gettok($read(%f,w,nick=*),2,61)
+        if $user.perfil.nascimento.mes(%n) = %mes { aline @anivers $base($user.perfil.nascimento.dia(%n),10,10,2) %n $user.perfil.idade(%n) | inc %y }
+        inc %x
+        %f = $findfile(users/,*.ini,%x)
+      }
+    }
+    msgtopo
+    msgt 0Aniversariantes 15do mês de0 $mes
+    msgt 14 $+ $str(¯,$calc(26 + $len($mes)))
+    var %x = 1,%t = 1,%y = $line(@anivers,0)
+    while %x <= %y { 
+      var %n = $line(@anivers,%x),%m = $gettok(%n,1,32),%f = $gettok(%n,3,32),%n = $gettok(%n,2,32)
+      if %m = $date(d) && (%t = 1) { msgdiv | msgt 8Aniversariantes 15do dia 14:D 15dalhe 8ovo14! | msgt | var %t = 2 }
+      if %m > $date(d) && (%t) { msgdiv | if %t = 1 { msgt 8Hoje 14-09 $replace($date,/,14/09) | msgdiv } | var %t = 0 }
+      msgl 0  %n $+ $spc(%n,18) 14¦15 Dia09 %m 14¦07 $iif(%s || %t,%f,$calc(%f - 1)) 15anos $+ $spc(%f,2) 14¦08 $signo(%n)
+      inc %x
+    }
+    msgdiv | msgt Listados08 $div(%y) 0aniversariantes 15do mês de09 $mes 
+    msgt Atualizado em09 $date(%anivers) 15ás09 $time(%anivers) | msgbase
+  }
+}
+
+alias com_chat_!presente {
+  var %x = $dados($nick,presente)
+  if ($date == $dados($nick,sauda)) {
+    if ($date == $dados($nick,presente)) {
+      msgtopo
+      msgt \o/\õ/\o/\ã/\ô/\o/\o/\o/\ö/\ô/\o/\õ/\o/\o/\ã/\o/\ã/\o/
+      msgt 
+      msgt 0Um montão de abraços de todos da staff do 9#8CdzForever14!
+      msgt 14Ano que vem tem mais! :)
+      msgt     
+      msgt \o/\õ/\o/\ã/\ô/\o/\o/\o/\ö/\ô/\o/\õ/\o/\o/\ã/\o/\ã/\o/
+      msgbase
+    }
+    else {
+      user.item.add $nick Vale Treino
+      w+ $nick presente $date
+
+      msgtopo
+      msgt 14:D 8Parabéns 14:D
+      msgt É com muita 0alegria 15que o 9CdzForever 15te oferece
+      msgt este humilde 0presente15, uma 0lembrancinha 15do canal
+      msgt para mais um 8super usuário 14:D
+      msgt
+      msgt Você recebeu um 9Vale Treino 14@_@!
+      msgt
+      msgt Para usá-lo, digite 7@Usar Vale Treino15. Ele te dá 
+      msgt direito a 091 Treino com Equipamentos15 extra no dia que 
+      msgt ele for usado.
+      msgt É um presente 0singelo15, mas faz parte da onda de 
+      msgt 0novidades 15que o canal anda pensando pra levar a 
+      msgt vocês, o motivo de nós existirmos :D
+      msgt 14Aguarde e verás. 0Parabéns e 8muitas 0felicidades
+      msgt 
+      msgr De toda a 7STAFF 15do 8CdzForever
+      msgr Para9 $nick
+      msgbase
+    }
+  }
+  else { msg =$nick 0,1 0,14 0,1 Presente 7porque 14¬¬15? 0,1 0,14 0,1  }
+}
+
+on *:join:#cdzforever:checkaniversariante $nick
+on *:nick:checkaniversariante $newnick
+
+alias checkaniversariante {
+  if ($1 !ison #cdzforever) return
+  if (!$regex($user.perfil.nascimento($1),$date(dd/mm/))) return
+
+  var %idade = $user.perfil.idade($1)
+  msgto #cdzforever Mensagem de boas vindas ao 0aniversariante do dia14! 8P7a8r7a8b7é8n7s09 $1 15e muitas 0felicidades 15pelos teus09 %idade 0aninhos 14:D
+  if ($dados($1,sauda) != $date) { 
+    noticeto $1 Digite 9!Presente 15no chat do bot para receber um humilde 0presente 15do 14#8CdzForever 14xD!!
+    w+ $1 sauda $date
+  }
+}

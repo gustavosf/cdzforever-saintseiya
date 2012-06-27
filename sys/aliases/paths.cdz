@@ -1,0 +1,185 @@
+;; Aliases Básicos ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+/op /mode # +ooo $$1 $2 $3
+/dop /mode # -ooo $$1 $2 $3
+/j /join #$$1 $2-
+/p /part #
+/n /names #$$1
+/w /whois $$1
+/k /kick # $$1 $2-
+/q /query $$1
+/send /dcc send $1 $2
+/chat /dcc chat $1
+/ping /ctcp $$1 ping
+/s /server $$1-
+
+;; Aliases Para os Caminhos dos Arquivos ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+news.path return sys/news.txt
+comments.path return sys/comments.txt
+enq.path return sys/enquetes.txt
+ips.path return sys/ips.txt
+lutas.path return sys/lutas.txt
+report.path return sys/report.txt
+loja.path return sys/loja.ini
+list.path return $+(sys/lists/,$1,.list)
+golpes.path return golpes.txt
+
+;; Aliases Diversos ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+fixurl return $regsubex($1-,/([^a-z0-9])/ig,% $+ $base($asc(\t),10,16,2))
+
+logs return $+(sys/logs/,$1-,.log)
+
+loja { 
+  if ($2) return $readini(sys/loja.ini,$capitalize($1),$2) 
+  return sys/loja.ini
+}
+
+randomstring return $regsubex($str(A,$iif($1,$1,8)),/./g,$mid(QWERTYUIOPASDFGHJKLZXCVBNMqwertyuiopasdfghjklzxcvbnm,$r(1,52),1))
+randomnum return $regsubex($str(A,$iif($1,$1,8)),/./g,$mid(0123456789,$r(1,10),1))
+rand.num return $randomnum($1)
+rand.str return $randomstring($1)
+
+w+ if ($dados($1,nick)) writeini $dados($1) $1 $2-
+w- if ($dados($1,nick)) remini $dados($1) $1 $2-
+w* if ($dados($1,nick)) writeini $dados($1) $2-
+w/ if ($dados($1,nick)) remini $dados($1) $2-
+
+echo/ echo teste!!!!
+
+h+ hadd -m $nick $1 $2-
+h- hdel -w $nick $1
+h? return $hget($nick,$1)
+
+max {
+  var %i = 2,%max = $1
+  while ([ $ [ $+ [ %i ] ] ] != $null) {
+    if ($v1 > %max) %max = $v1
+    inc %i
+  }
+  return %max
+}
+maxlen {
+  var %i = 2,%max = $len($1)
+  while ([ $ [ $+ [ %i ] ] ] != $null) {
+    if ($len($v1) > %max) %max = $v1
+    inc %i
+  }
+  return %max
+}
+min {
+  var %i = 2,%min = $1
+  while ([ $ [ $+ [ %i ] ] ] != $null) {
+    if ($v1 < %min) %min = $v1
+    inc %i
+  }
+  return %min
+}
+
+
+trim return $regsubex($1-,/^[ \t]+|[ \t]+$/,)
+
+capitalize {
+  var %x = $lower($1-)
+  return $regsubex(%x,/(*UTF8)^([a-zA-Zà-ú])|(\s[a-zA-Zà-ú])/g,$upper(\1))
+}
+
+rsigla return $upper($remove($regsubex($1,/\b(\w)[\wà-ú]+\b/gi,\1),$chr(32)))
+
+mitens {
+  if ($window(@itens.nk)) clear @itens.nk
+  else window -h @itens.nk
+  aline @itens.nk $dados($1,itens)
+  var %x = 1,%t = $numtok($line(@itens.nk,1),44),%i,%it,%qtd,%l
+  while %x <= %t { 
+    aline @itens.nk $gettok($line(@itens.nk,1),%x,44) 
+    inc %x 
+  }
+  dline @itens.nk 1
+  %i = $line(@itens.nk,1)
+  while (%i) {
+    %l = $fline(@itens.nk,%i,1)
+    %qtd = 0
+    while %l {
+      inc %qtd
+      dline @itens.nk %l
+      %l = $fline(@itens.nk,%i,1)
+    }
+    %it = %it %i $+ $iif(%qtd > 1,14(08 $+ %qtd $+ 14)) $+ 15,00
+    %i = $line(@itens.nk,2)
+  }
+  window -c @itens.nk
+  return $sorttok($gettok(%it,1-,44),44)
+}
+
+arms.categorias {
+  if (%arms.categorias) return %arms.categorias
+  var %x = $ini($arms.path,0),%arms
+  while (%x) {
+    %arms = $addtok(%arms,$readini($arms.path,$ini($arms.path,%x),categoria) $+ @ $+ $readini($arms.path,$ini($arms.path,%x),mundo),44)
+    dec %x 
+  }
+  set %arms.categorias %arms
+  return %arms
+}
+arms.categorias.reset unset %arms.categorias
+
+
+procura.por {
+  var %x = $findfile(users,*.ini,0),%u,%c
+  var %cond = $iif($3,$3,$2)
+  var %from = $iif($3,1,0)
+  while (%x) {
+    %u = $gettok($nopath($findfile(users,*.ini,%x)),1,46)
+    if (%from) %c = $dados(%u,$1,$2)
+    else %c = $dados(%u,$1)
+    if (%c == %cond) echo -a ----- %u -- %c
+    dec %x
+  }
+}
+com_aux_!info_armadura sagitário
+
+veqtosemails {
+  var %x = $findfile(users,*.ini,0),%u,%e = 0
+  while (%x) {
+    %u = $gettok($nopath($findfile(users,*.ini,%x)),1,46)
+    if ($user.perfil.email(%u)) inc %e
+    dec %x
+  }
+  var %x = $findfile(users2,*.ini,0)
+  while (%x) {
+    %u = $gettok($nopath($findfile(users2,*.ini,%x)),1,46)
+    if ($readini(users2/ $+ %u $+ .ini,user,email)) inc %e
+    dec %x
+  }
+  echo >>> %e
+}
+
+
+listgolpes {
+  return
+  var %i = $ini(armaduras.ini,0),%a,%g,%j,%ar
+
+  while (%i) {
+    %a = $ini(armaduras.ini,%i)
+    %ar = $readini(armaduras.ini,%a,arm)
+
+    var %r = $read(golpes.txt,w,%ar $+ @*),%g
+    while (%r) {
+      %g = $addtok(%g,$gettok(%r,2,$asc(@)),44)
+      %r = $read(golpes.txt,w,%ar $+ @*, $calc($readn + 1))
+    }
+    writeini armaduras.ini %a golpes $iif(%g,%g,Esta armadura não possui golpes)
+
+    /*
+    %g = $readini(armaduras.ini,%a,golpes)
+    %j = $numtok(%g,44)
+    while (%j) {
+      if (!$read(golpes.txt,w,%ar $+ @ $+ $trim($gettok(%g,%j,44)) $+ @*)) echo -a %ar $+ @ $+ $trim($gettok(%g,%j,44)) $+ @*
+      dec %j
+    }
+    */
+    dec %i
+  }
+}

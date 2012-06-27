@@ -1,0 +1,58 @@
+/* Respostas :D
+
+101 1 Identificação aceita
+101 0 <m> Identificação negada
+
+201 Envio dos headers das mensagems
+202 Fim do envio dos headers das mensagens
+
+211 <id> header da mensagem
+212 <id> Corpo da mensagem
+213 <id> final da mensagem
+214 erro ao baixar mensagem 
+
+*/
+
+on *:socklisten:opernews:sockaccept on. $+ $r(1111,9999)
+on *:sockread:on.*:{
+  sockread %on | tokenize 32 %on
+
+  if $1 = 101 {
+    if ($dados($2,senha) === $3) {
+      if ($readini(ops.ini,$2,op) = sim) { sockmark $sockname $2 | sockwrite -nt $sockname 101 1 }
+      else { sockwrite -nt $sockname 101 0 Acesso Negado. }
+    }
+    else { sockwrite -nt $sockname 101 0 Login ou senha incorretos! | sockclose $sockname }
+  }
+  if $1 = 210 { 
+    var %x = $read(opernews.txt,s,@new $2)
+    if %x {
+      sockwrite -nt $sockname 211 $2 %x 
+      %x = $read(opernews.txt,$calc($readn + 1))
+      while (%x) && (@new* !iswm %x) {
+        sockwrite -nt $sockname 212 $2 %x
+        %x = $read(opernews.txt,$calc($readn + 1))
+      }
+      sockwrite -nt $sockname 213 $2
+    }
+    else sockwrite -nt $sockname 214
+  }
+  if $1 = 200 { 
+    var %w = @ $+ $sockname
+    if ($window(%w)) clear %w
+    else window %w
+    var %x = 0,%r = $read(opernews.txt,s,@new)
+    while %r {
+      inc %x | aline %w %r
+      %r = $read(opernews.txt,s,@new,$calc($readn + 1))
+    }
+    sockwrite -nt $sockname 200 %x
+    %r = $line(%w,%x)
+    while (%r) && (%x > 0) {
+      sockwrite -nt $sockname 201 %r | dec %x
+      %r = $line(%w,%x)
+    }
+    sockwrite -nt $sockname 202
+    window -c %w
+  }
+}

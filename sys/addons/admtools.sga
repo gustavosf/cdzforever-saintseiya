@@ -1,0 +1,22 @@
+;; Administrative Tools
+
+alias com_all_-load {
+  op.check !
+  if (!$1) msgn Sintaxe 4incorreta15. Use: 8-load <arquivo>
+  else {
+    if ($script($qt($1-))) reload -rs $v1
+    else load -rs $qt($1-)
+    if ($script($nopath($1-))) noticen Arquivo9 $qt($1-) 15carregado!
+    else noticen Algum 4erro 15ocorreu. 0Tente novamente mais tarde15!
+  }
+}
+alias com_chat_-load {
+  op.check !
+  if (!$1) msgt Sintaxe 4incorreta15. Use: 8-load <arquivo>
+  else {
+    if ($script($qt($1-))) reload -rs $v1
+    else load -rs $qt($1-)
+    if ($script($qt($1-))) msgt Arquivo9 $qt($1-) 15carregado!
+    else msgt Algum 4erro 15ocorreu. 0Tente novamente mais tarde15!
+  }
+}

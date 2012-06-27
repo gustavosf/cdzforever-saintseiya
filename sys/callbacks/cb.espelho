@@ -1,0 +1,243 @@
+alias cb.espelho {
+  msgtopo
+  msgt 9Você usou o espelho!
+  msgt
+  msgt 0         _________            
+  msgt 0         |        |           
+  msgt 0     ____|________|____       
+  msgt 0        //// _____)           
+  msgt 0        _|   (o)(o)           
+  msgt 0       (o        \|           
+  msgt 0         |     (..)           
+  msgt 0         |    /||||\          
+  msgt 0         | \     \\           
+  msgt 0         |  ----__\\__        
+  msgt 0                )    (        
+  msgt 0   ____________(      )_______
+  msgt 0                \    /        
+  msgt 0                 \__/         
+  msgt
+  msgt 08 $+ $replace($r(1,3),1,Masáááááááá tu és foda hein!,2,Mas que guapo tche!,3,Baaarbaridaaaaadeee tche!)
+  msgbase
+}
+
+alias com_chat_!teste {
+  msgtopo
+  msgtx Testando o esquema de quebra de páginas para 4textos abcde muito grandes. Acho que talvez funcione de boa. Creio que seja muito fácil usar ele... quero ver se com as cores ele se mantém direito, ou se fode com tudo.
+  msgdiv
+  msgtx teste
+  msgdiv
+  msgbase
+
+}
+
+alias cb.valetreino {
+  user.treino.tce.set 0
+  user.treino.mestre.set 0
+  user.treino.normal.set 0
+  user.treino.asgard.set 0
+  user.treino.marinas.set 0
+  msgtopo
+  msgt 14._____.                                            
+  msgt 14'15 \o/ 14'0          11Você usou o vale treino!          
+  msgt    |                                               
+  msgt   / \    0Seus treinos foram 8liberados 0de novo!     
+  msgt 9 ¯¯¯¯¯                                             
+  msgbase
+}
+
+alias cb.ordemdivina {
+  if ($hget(bot.randomfight)) {
+    msge Já existe um cavaleiro invasor no 8#CdzForever15!¼Você deve 0esperar 15ele ser derrotado (14ou fugir15) para poder liberar outro.
+    halt 
+  }
+  com_aux_randomfight
+  msgtopo
+  msgt 0Você usou a 11Ordem Divina0!
+  msgt O cavaleiro08 $hget(bot.randomfight,cav) 15apareceu no canal!
+  msgbase
+}
+
+alias cb.treinocerto {
+  if ($dados($nick,treinocerto) == $date) {
+    msgtopo
+    msgl 9Treino Certo:0 Você já usou ele hoje!
+    msgbase
+    halt
+  }
+  w* $nick specialstatus treinocerto $date
+  msgtopo
+  msgt 0Você usou o 9Treino Certo0!
+  msgt Com isso, você 8não 15terá falhas nos treinos de hoje!
+  msgbase
+}
+
+alias cb.treinofail {
+  if (!$1) {
+    msge Você precisa indicar um 0nick 15para usar o Treino Fail!¼Uso: 8@usar Treino Fail > <nick>¼Ex: 9@usar Treino Fail > xys
+    halt
+  }
+  if (!$dados($1,nick)) {
+    msge O usuário09 $1 15não está cadastrado no bot!
+    halt
+  }
+  if ($dados($1,treinofail) == $date) {
+    msge 08 $+ $1 15já foi indicado para o 4Treino Fail 15hoje!¼0Use-o outro dia :D
+    halt
+  }
+  w* $1 specialstatus treinofail $date
+  msgtopo
+  msgt 0Você usou o 9Treino Fail0 em11 $dados($1,nick) $+ 0!
+  msgt Com isso, ele 4não conseguira 15completar os treinos hoje!
+  msgbase
+}
+
+alias cb.beber {
+  if ($user.stamina == 100) { msge 0Seu Vigor Físico já está 12Excelente0. | halt }
+  if ($user.stamina <= 0) { msge 0,1Seu Vigor Físico é 4crítico0.¼Você precisa se curar antes.¼0,1Digite: 7!9Hospital Graad | halt }
+  if ($1 = chimarrão) {
+    user.stamina.add 10
+    msgtopo
+    msgt 0  \\                                          
+    msgt 3 __0\\3__          0Você tomou um mate bem bagual
+    msgt 5 )    (             0e recuperou 0910%0 do seu    
+    msgt 5(      )                 0Vigor Físico!        
+    msgt 5 \    /                                       
+    msgt 5  \__/                                        
+    msgbase
+  }
+}
+alias cb.comer {
+  if ($user.stamina == 100) { msge 0Seu Vigor Físico já está 12Excelente0. | halt }
+  if ($user.stamina <= 0) { msge 0,1Seu Vigor Físico é 4crítico0.¼Você precisa se curar antes.¼0,1Digite: 7!9Hospital Graad | halt }
+  msgtopo
+  if ($1- = Maçã) {
+    user.stamina.add 25
+    msgt 4     5;'                                       
+    msgt 4 .´'';''0/\      0Você comeu uma 4maçã       
+    msgt 4;       0\_;     0e recuperou 25% do seu        
+    msgt 4`.       .´            0Vigor Físico!          
+    msgt 4  `. . .´                                     
+    msgt 4    '5'4'                                       
+  }
+  if ($1- = Chocolate) {
+    user.stamina.add 50
+    msgt 5 _ _                                         
+    msgt 5|_|_|_       0Você comeu um 5Chocolate         
+    msgt 5|_|_|_|        0e recuperou 50% do seu        
+    msgt 5|_|_|_|             0Vigor Físico!            
+    msgt 5|_|_|_|                                       
+  }
+  if ($1- = Sushi) {
+    user.stamina.add 100
+    msgt 0   \/          0Você comeu um Sushi       
+    msgt 0   /\        0e recuperou 100% do seu      
+    msgt 0  /  \            0Vigor Físico!          
+    msgt 0 /3____0\                                  
+    msgt 0/3|____|0\                                 
+  }
+  msgbase
+}
+
+alias cb.dormir {
+  var %vigor = 100 - $user.stamina
+  if ($user.treino.active) msgehalt Você está no 0meio de um treinamento 15manolo!
+  if (%vigor = 100) msgehalt Você está 4morto. 15Você precisa usar o 11hospital 15para reviver 14:D
+  if (%vigor = 0) msgehalt Você já está com o vigor no 9máximo 15:)
+
+  var %tempo = $ceil($calc(%vigor / 2))
+  timer.sleep. $+ $nick %tempo 600 cb.dormir.aux $nick 
+  %tempo = %tempo * 600
+  msgtopo
+  msgt 0Você está dormindo!
+  msgt
+  msgt Tempo estiamado para recueperar todo o seu vigor:
+  msgt 09 $+ $replacex($tempo(%tempo),h, hora(s) ,m, minuto(s) ,s, segundo(s) )
+  msgdiv
+  xmsgt Você será 4desconectado 15do bot. Caso você abra o chat novamente, você será 0automaticamente acordado 15e parará de recuperar vigor.
+  msgbase
+  close -c $nick
+}
+alias cb.dormir.aux {
+  user.stamina.add $1 2
+  var %v = $user.stamina($1)
+  if ($1 ison #cdzforever) noticeto $1 Você $iif(%v == 100,acordou. Seu vigor foi 8totalmente recuperado15,está 0dormindo15. Seu vigor está em) $iif(%v < 30,04,$iif(%v < 60,08,$iif(%v < 80,11,09))) $+ %v $+ 15/0010015.
+  else $+(.timer.sleep.,$1) off
+}
+alias cb.dormir.acordar {
+  if ($timer(.timer.sleep. $+ $1)) {
+    if ($2) {
+      var %v = $user.vigor($1),%v = $iif(%v < 30,04,$iif(%v < 60,08,$iif(%v < 80,11,09))) $+ %v $+ 15/00100
+      noticeto $newnick Você 0acordou15! Seu vigor atual é %v $+ 15.
+    }
+    $+(.timer.sleep.,$1) off
+  }
+}
+on *:nick:if ($nick != $newnick) { cb.dormir.acordar $newnick 1 }
+on *:kick:#cdzforever:cb.dormir.acordar $knick 1
+on *:part:#cdzforever:cb.dormir.acordar $nick 1
+on *:quit:cb.dormir.acordar $nick 0
+
+
+
+alias cb.telahades {
+  if (!$1) msgehalt Você precisa indicar um nick para usar o ítem.¼Uso: @Usar Tela de Hades > Nick¼Ex: @Usar Tela de Hades > xYs
+  if (!$dados($1,nick)) msgehalt Usuário $1 não está cadastrado!
+  if (!$user.vigor($1)) msgehalt Usuário $1 já está com 0 de vigor! Hades se recusa a pintar o retrato dele.
+  user.vigor.set $1 0
+  msgtopo
+  msgl 14\//\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\14\/
+  msgl 14\/                                14\/
+  msgl 14\/4             ((   )  (          14\/
+  msgl 14\/4         ( (   )(( (   )        14\/
+  msgl 14\/4       )    ) ( )) )( (( )      14\/
+  msgl 14\/4       ( (((   )  (  )  ) )     14\/
+  msgl 14\/4      )) (( ) (          ((     14\/6   Hades 15pintou um
+  msgl 14\/4     (  )) )0  ____   ____ 4(     14\/15      retrato de
+  msgl 14\/4      ) ( )0 `|<12()0;|-|,12()0>|      14\/
+  msgl 14\/4     ( ))(0    `--'  7\0`--'       14\/
+  msgl 14\/4     )( ( )7       (- )   )      14\/04 $+ $center($dados($1,nick),21)
+  msgl 14\/4       ))7        _____  /       14\/
+  msgl 14\/4         )7   `     --  /        14\/
+  msgl 14\/7          _ ,  `   __,          14\/0  Toda a energia dele
+  msgl 14\/0  -- ---'//        /            14\/0      foi sugada!
+  msgl 14\/0        / \       /             14\/
+  msgl 14\/0        \  \     /|             14\/04    Ele cai duro no
+  msgl 14\/0         \ /|   / /`.           14\/04      chão morto!
+  msgl 14\/0            |  / /   `.         14\/
+  msgl 14\/0                                14\/
+  msgl 14\//\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\14/\
+  msgbase
+  return
+}
+
+
+alias com_chan_@chutar com_aux_violencia chuta $1
+alias com_chan_@socar com_aux_violencia soca $1
+alias com_aux_violencia {
+  op.check !
+  if (!$dados($2,nick)) noticen 04 $+ $2 15não está cadastrado!
+  else {
+    var %dano = $rand(1,10)
+    user.stamina.retrieve $2 %dano
+    if ($1 = soca) var %local = $replacex($floor($calc(%dano / 2)),1,estômago,2,pâncreas,3,rosto,4,ouvido,5,gogó)
+    else %local = $replacex($floor($calc(%dano / 2)),1,canela,2,batata da perna,3,costela,4,nuca,5,gônada)
+    if ($user.stamina($2) > 0) msgto #cdzforever  $+ $nick $+  $1 $+ 04 $2 15n $+ $iif($1 = chuta,a,o) $+ 0 %local 15causando um dano de08 %dano 15de vigor (00 $+ $user.stamina($2) $+ 15/0910015)
+    else { 
+      user.stamina.add $2 1
+      msgto #cdzforever  $+ $nick $+  $1 $+ 04 $2 15n $+ $iif($1 = chuta,a,o) $+ 0 %local 15causando um dano de08 %dano 15de vigor deixando-o  11insconsciente 15(00 $+ $user.stamina($2) $+ 15/0910015)
+    }
+  }
+}
+
+
+alias cb.adaga {
+  var %v = $r(1,10)
+  user.vigor.retrieve %v
+  msgtopo
+  msgt ...Você usou a adaga...
+  msgt
+  msgt Ops! Você se 4cortou 15e 0perdeu09 %v 15de vigor!
+  msgbase
+  return
+}

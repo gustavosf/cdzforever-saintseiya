@@ -1,0 +1,25 @@
+on *:chat:*:{
+  if $strip($1) == !seelog {
+    op.check ! = | id.check = 
+    if $2 {
+      %log = $logdir $+ $2 $+ .log
+      if $isfile(%log) { 
+        if ($numtok($3,45) = 2) var %l = $3,%x = $gettok(%l,1,45)
+        else { 
+          var %l = $lines(%log),%x = $calc(%l - $iif($3,$3,30))
+          var %x = $iif(%x < 0,1,%x),%l = %x $+ - $+ %l
+        }
+        msg =$nick 0,1 14,14 0,1 Listando as linhas09 %l 0do arquivo09 $2 $+ .log $+ 15. 14,14 0,1 
+        msg =$nick 
+        while (%x isnum %l) {
+          msg =$nick  $read(%log,%x)
+          inc %x
+        }
+        msg =$nick 
+        msg =$nick 0,1 0,14 0,1 Listagem Completa. 0,14 0,1 
+      }
+      else { msg =$nick 0,1 0,14 0,1 O arquivo09 $2 $+ .log 15não 0foi encontrado na pasta dos logs 0,14 0,1  }
+    }
+    else { msg =$nick 0,1 0,14 0,1 Parâmetro 8Faltando15!0 Uso:11 !seelog 0<11log0> [15ultimas_linhas0] 0,14 0,1  }
+  }
+}

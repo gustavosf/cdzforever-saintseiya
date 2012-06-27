@@ -1,0 +1,34 @@
+alias com_chat_!who com_chat_!users
+alias com_chat_!users {
+  id.check =
+  if ($window(@who)) clear @who
+  else window -hs @who
+  var %x = 1,%nick,%sexo,%cosmo,%arm,%lv,%aura
+  while %x <= $chat(0) {
+    %nick = $chat(%x)
+    if ($chat(%nick).status = active) && $dados(%nick,nick) {
+      %lv = $replace($oplv(%nick),0, ,1,7+,2,15@,3,8!) $+ 14 $+  $replace($dados(%nick,sexo),masculino,M,Feminino,F)
+      %cosmo = $dados(%nick,cosmo)
+      %arm = $dados(%nick,armadura)
+      aline @who $spc(%cosmo,20).0 $+ %cosmo %nick %lv $aura(%nick).x $iif($dados(%nick,chat),9O,4X) %arm
+    }
+    inc %x
+  }
+  msgtopo
+  msgt Listando os usuários conectados no chat...
+  msgdiv
+  var %x = $line(@who,0),%l
+  while %x > 0 {
+    %l = $line(@who,%x)
+    %cosmo = $gettok(%l,1,32)
+    %nick = $gettok(%l,2,32)
+    %lv = $gettok(%l,3,32)
+    %aura = $gettok(%l,4,32)
+    %arm = $gettok(%l,6-,32)
+    msgl %lv 14¦ 8 $+ %nick $iif(%arm = Nenhuma,14(15Aprendiz14),15de00 %arm)
+    msgl   $+ $gettok(%l,5,32) 14¦   15Aura14/09 $+ %aura $+ $spc(%aura,10) 15Cosmo14/09 $+ $div(%cosmo)
+    msgl    14¦
+    dec %x
+  }
+  msgbase
+}

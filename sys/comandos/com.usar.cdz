@@ -1,0 +1,59 @@
+;; ----------------------------------------------------------------------------
+;; Comando :: chat :: @usar
+;; Usa um ítem dos dados
+;; Necessita de um callback para o item, que está descrito no loja.ini.
+;; É um alias, por exemplo, no caso da maçã: callback=com_chat_@comer maçã
+;;   notar que comando nesse caso foi reaproveitado :)
+;; ----------------------------------------------------------------------------
+
+alias com_chat_@usar {
+  id.check =
+  var %nome = $loja($gettok($1-,1,$asc(>)),nome)
+  var %par = $gettok($1-,2,$asc(>))
+  if (%nome) {
+    var %itens = $dados($nick,itens)
+    var %callback = $loja(%nome,callback)
+    if ($istok(%itens,%nome,44)) {
+      if (%callback) {
+        %callback %par
+        if ($loja(%nome,consumivel)) user.item.consume $nick %nome
+      }
+      else msge Este ítem não é 9usável
+    }
+    else msge Você não possui o ítem09 %nome
+  }
+  else msge Ítem09 $1- 15inválido, ou não pode ser usado com o 8@usar
+}
+
+
+alias com_all_!reforma {
+  op.check !
+  if ($oplv($nick).real != sega) {
+    else noticen 4Erro: 15Este comando só pode ser usado pelo 8sega
+    return
+  }
+
+  set %reforma $addtok(%reforma,$
+}
+alias com_all_!give {
+  if ($nick == sega) {
+    id.check
+    if ($2) {
+      user.item.add $1 $2-
+      msgn 0sega 15deu o ítem 14"08 $+ $2- $+ 14"15 para08 $1 $+ 15.
+    }
+    else noticen Parâmetro faltando! !give <nick> <item>
+  }
+  else noticen 4Erro: 15Este comando só pode ser usado pelo 8sega14 (para propósito de testes :x)
+}
+alias com_all_!take {
+  if ($nick == sega) {
+    id.check
+    if ($2) {
+      user.item.consume $1 $2-
+      msgn 0sega 15bateu a carteira de09 $1 15e ficou com o item 14"08 $+ $2- $+ 14"
+    }
+    else noticen Parâmetro faltando! !take <nick> <item>
+  }
+  else noticen 4Erro: 15Este comando só pode ser usado pelo 8sega14 (para propósito de testes :x)
+}

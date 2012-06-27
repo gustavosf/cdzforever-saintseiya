@@ -1,0 +1,14 @@
+on *:text:*:#cdzforever:{
+  var %re = /HAIO|hauhauhau|AHUHhuahuhHUAAHUHhuahu|HEåHµEåHµEåH|HoHoHoHoHoHoHo|hehehehe|huåhuHUAHhuå|HuaHuaHuaHua|heiuaheiua|hahahaha|UahUahUah|HawHawHawHaw|kkkkkkkkk|HoHoHo|heiuaheiua|HAU/i|kkkk
+  if ($count($strip($1-),h) >= 10) || ($count($strip($1-),k) >= 10) || ($regex($strip($1-),%re)) hinc -mu10 antiflood $nick
+  elseif ($hget(antiflood,$nick)) hdec antiflood $nick
+  if ($hget(antiflood,$nick) > 3) || ($count($strip($1-),h) >= 150) {
+    kick # $nick EXCESS RISADA. Controle-se
+    if ($hget(antiflood,$nick)) hdel antiflood $nick
+  }
+}
+on *:join:#cdzforever:{
+  if ($nick == $me) && ($hget(antiflood)) { hfree antiflood }
+  elseif ($hget(antiflood,$nick)) hdel antiflood $nick
+}
+on *:nick:if ($hget(antiflood,$nick)) hdel antiflood $newnick

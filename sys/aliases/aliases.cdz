@@ -1,0 +1,128 @@
+rrremotelist {
+  echo -a ALIASES ----------------------------------------------------------
+  var %x = $alias(0)
+  while (%x) {
+    echo -a >> $remove($alias(%x),C:\Users\Gustavo\Desktop\SaintSeiya)
+    dec %x
+  }
+  echo -a REMOTES ----------------------------------------------------------
+  var %x = $script(0)
+  while (%x) {
+    echo -a >> $remove($script(%x),C:\Users\Gustavo\Desktop\SaintSeiya)
+    dec %x
+  }
+}
+
+dados { 
+  if !$2 { return users/ $+ $1 $+ .ini } 
+  if !$3 { return $readini(users/ $+ $1 $+ .ini,$1,$2) }
+  return $readini(users/ $+ $1 $+ .ini,$2,$3)
+}
+top { var %n = $read(sys/top/top.cdz,w,*: $+ $1) | if ($readn != $lines(sys/top/top.cdz)) { return $readn } }
+
+tempo {
+  if ($prop) { var %x $1- | var %1 = $replace($gettok(%x, 1, 32), sun, Domingo, mon, Segunda, tue, Terça, wed, Quarta, thu, Quinta, fri, Sexta, sat, Sábado) | var %2 = $replace($gettok(%x, 2, 32),jan,01,feb,02,mar,03,apr,04,may,05,jun,06,jul,07,aug,08,sep,09,oct,10,nov,11,dec,12) | var %3 = $gettok(%x,3,32) | var %4 = $left($gettok(%x, 4, 32), 8) | var %5 = $replace($gettok(%x, 5, 32), 2001, 01, 2002, 02, 2003, 03, 2004, 04, 2005, 05) | return %1 $+ , %3 $+ / $+ %2 $+ / $+ %5 %4 }
+  if (!$prop) return $remove($replace($duration($1), days, d, day, d, mins, m, secs, sec, min, m, sec, s, hrs, h, hr, h), $chr(32))
+}
+
+hashs { if $1 { echo -a --------- | var %x = 1 | while %x <= $hfind($1,*,0,w) { echo -a $1 $+ : $hfind($1,*,%x,w) : $hget($1,$hfind($1,*,%x,w)) | inc %x } | echo -a --------- } | else { echo -a --------- | var %x = 1 | while %x <= $hget(0) { echo -a $hget(%x) | inc %x } | echo -a --------- } }
+
+mes { return $replace($iif($1,$1,$date(m)),10,Outubro,11,Novembro,12,Dezembro,1,Janeiro,2,Fevereiro,3,Março,4,Abril,5,Maio,6,Junho,7,Julho,8,Agosto,9,Setembro) }
+dia { return $replace($iif($1,$1,$date(ddd)),sun,Domingo,mon,Segunda,tue,Terça-Feira,wed,Quarta-Feira,thu,Quinta-Feira,fri,Sexta-Feira,sat,Sábado) }
+date² { return $puttok($date($1),$mes($date($1,m)),2,47) }
+ctime.mes { return $ctime(00:00:00 01. $+ $date(m.yy)) }
+ctime.prox.mes { 
+  if $calc($date(m) + 1) = 13 { var %m = 1,%a = $calc($date(yy) + 1) } | else { var %m = $date(m) + 1,%a = $date(yy) }
+  return $ctime(00:00:00 $+(01.,%m,.,%a))
+}
+
+dll.whilefix dll sys/dll/WhileFix.dll WhileFix .
+
+id.check {
+  if ($nick !ison #CdzForever) { $iif($1 = =,.msg =$nick,.notice $nick) 1,1 14,14 9,1 $nick $+ 14,15 Você não está no 915Cdz0Fore15ver15 para ter acesso ao bot. 14,14 1,1  | chat.close $nick Você não está no canal. | halt }
+  if (nocad isin $1-) return
+  if ($dados($nick,nick) == $null) { $iif($1 = =,.msg =$nick,.notice $nick) 1,1 14,14 9,1 $nick $+ 14,15 Você não está4 Cadastrado! 14,14 1,1  | halt }
+  if (noident isin $1-) return
+  if (!$user.identifyed) { $iif($1 = =,.msg =$nick,.notice $nick) 1,1 14,14 9,1 $nick $+ 14,15 Você não está0 Identificado! 14,14 1,1  | halt }
+}
+id? {
+  if ($nick !ison #CdzForever) || ($dados($nick,nick) == $null) || ($dados($nick,ident) == nao) { return $false }
+  return $true
+}
+op.check { if ($oplv($nick) < $replace($1,!,3,@,2,+,1)) msgehalt Você não pode utilizar esse comando! }
+oplv { 
+  if ($prop = real) return $ulist($iif($1,$1,$nick)).info
+  return $calc($level($iif($1,$1,$nick)) - 1) 
+}
+
+spc { 
+  if !$2 { return $str($iif($prop != $null,$prop,$chr(160)),$calc(25 - $len($1))) } 
+  else { return $str($iif($prop != $null,$prop,$chr(160)),$calc($2 - $len($1))) } 
+} 
+
+div { return $replace($bytes($1,b),$chr(44),.) }
+
+reforma { 
+  if (!$istok($1-,$nick,32) && $oplv($nick).real != sega) {
+    $iif($target == $me || $left($target,1) == $chr(35),.notice $nick,.msg =$nick) 0,1 0,14 15,1 Comando em 9reforma 0,1 0,14 0,1  
+    halt 
+  }
+}
+
+starget return $iif($target == $me,$nick,$chan)
+
+disabled {
+  if ($target == $me || $left($target,1) == $chr(35)) noticeto $nick Comando 4Desabilitado15! $iif($1,Mensagem:0 $1-)
+  else msge Comando 4Desabilitado15! $iif($1,¼ ¼0 $+ $1-)
+  halt 
+}
+
+num->ext {
+  if $remove($1,.) isnum 1- {
+    tokenize 46 $div($1)
+    var %x = $numtok($1-,32),%y = 1,%s,%z,%r
+    while 0 < %x {
+      var %z = $gettok($1-,%x,32),%s
+      if %z >= 100 {
+        %s = $replace($int($calc(%z / 100)),1,cento,2,duzentos,3,trezentos,4,quatrocentos,5,quinhentos,6,seicentos,7,setecentos,8,oitocentos,9,novecentos)
+        %z = $calc(%z - $int($calc(%z / 100)) * 100)
+      }
+      if %z >= 10 {
+        %s = $iif(%s,%s e) $replace($int($calc(%z / 10)),1,$replace(%z,10,dez,11,onze,12,doze,13,treze,14,quatorze,15,quinze,16,dezesseis,17,dezessete,18,dezoito,19,dezenove),2,vinte,3,trinta,4,quarenta,5,cinquenta,6,sessenta,7,setenta,8,oitenta,9,noventa)
+        if $int($calc(%z / 10)) == 1 { %z = 0 }
+        else { %z = $calc(%z - $int($calc(%z / 10)) * 10) }
+      }
+      if %z {
+        %s = $iif(%s,%s e) $replace($int(%z),1,um,2,dois,3,três,4,quatro,5,cinco,6,seis,7,sete,8,oito,9,nove)
+        %z = 0
+      }
+      if %s = cento { %s = cem }
+      if %s = um { %r = %r $+ , $+ $iif(%y != 2,%s) $replacex(%y,septilhão,10,octilhão,11,nonilhão,12,decilhão,$iif(%y > 12,%y,&),zilhão,1,,2,mil,3,milhão,4,bilhão,5,trilhão,6,quatrilhão,7,quintilhão,8,sextilhão,9) }
+      else { %r = %r $+ , $+ $iif(%s,%s $replacex(%y,10,octilhões,11,nonilhões,12,decilhões,$iif(%y > 12,%y,&),zilhões,1,,2,mil,3,milhões,4,bilhões,5,trilhões,6,quatrilhões,7,quintilhões,8,sextilhões,9,septilhões),.) }
+      inc %y | dec %x
+    }
+    var %x = $numtok(%r,44),%s
+    while 0 < %x {
+      %s = $iif(%s,%s) $+ $iif($gettok(%r,%x,44) != .,$iif(%x = 1,$iif($numtok(%r,44) != 1, e),$chr(44)) $gettok(%r,%x,44))
+      dec %x
+    }
+    return $gettok(%s,1-,44)
+  }
+  else return error
+}
+
+center {
+  var %l = $calc($2 - $len($strip($1)))
+  var %r = $floor($calc(%l / 2)),%l = $ceil($calc(%l / 2))
+  return $str($chr(160),%l) $+ $1 $+ $str($chr(160),%r)
+}
+lefter return $1 $+ $str($chr(160),$calc($2 - $len($strip($1))))
+righter return $str($chr(160),$calc($2 - $len($strip($1)))) $+ $1
+
+read_arms {
+  var %x = 1
+  while (%x <= $ini(armaduras.ini,0)) {
+    write c:\arms.cvs $readini(armaduras.ini,$ini(armaduras.ini,%x),arm) $+ ; $+ $readini(armaduras.ini,$ini(armaduras.ini,%x),traje) $+ ; $+ $readini(armaduras.ini,$ini(armaduras.ini,%x),categoria) $+ ; $+ $readini(armaduras.ini,$ini(armaduras.ini,%x),classe) $+ ; $+ $readini(armaduras.ini,$ini(armaduras.ini,%x),golpes) $+ ; $+ $readini(armaduras.ini,$ini(armaduras.ini,%x),extra) $+ ;
+    inc %x
+  }
+}

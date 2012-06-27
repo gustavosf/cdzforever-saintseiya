@@ -1,0 +1,481 @@
+;; --------------------------------------------------------------------------------------------------------------
+;;                   ___                       ___           ___                       ___                   
+;;       ___        /__/\          ___        /  /\         /  /\        ___          /  /\                  
+;;      /  /\       \  \:\        /  /\      /  /::\       /  /::\      /  /\        /  /::\                 
+;;     /  /:/        \  \:\      /  /:/     /  /:/\:\     /  /:/\:\    /  /:/       /  /:/\:\    ___     ___ 
+;;    /  /:/     ___  \  \:\    /  /:/     /  /:/  \:\   /  /:/~/:/   /__/::\      /  /:/~/::\  /__/\   /  /\
+;;   /  /::\    /__/\  \__\:\  /  /::\    /__/:/ \__\:\ /__/:/ /:/___ \__\/\:\__  /__/:/ /:/\:\ \  \:\ /  /:/
+;;  /__/:/\:\   \  \:\ /  /:/ /__/:/\:\   \  \:\ /  /:/ \  \:\/:::::/    \  \:\/\ \  \:\/:/__\/  \  \:\  /:/ 
+;;  \__\/  \:\   \  \:\  /:/  \__\/  \:\   \  \:\  /:/   \  \::/~~~~      \__\::/  \  \::/        \  \:\/:/  
+;;       \  \:\   \  \:\/:/        \  \:\   \  \:\/:/     \  \:\          /__/:/    \  \:\         \  \::/   
+;;        \__\/    \  \::/          \__\/    \  \::/       \  \:\         \__\/      \  \:\         \__\/    
+;;                  \__\/                     \__\/         \__\/                     \__\/                  
+;;                                             
+;; Tutorial do SaintSeiya
+;; Autor: Hyoga
+;; ------------------------------------------------------------------------------------------- Aliases Auxiliares
+
+alias user.tutorial return $dados($iif($1,$1,$nick),tutorial)
+alias user.tutorial.complete w+ $iif($1,$1,$nick) tutorial.complete 1
+alias user.tutorial.completion return $dados($iif($1,$1,$nick),tutorial.complete)
+alias user.tutorial.match return $iif($user.tutorial($iif($2,$1,$nick)) == $iif($2,$2,$1) && !$user.tutorial.completion($iif($2,$1,$nick)),1,0)
+alias user.tutorial.set {
+  w+ $iif($2,$1,$nick) tutorial $iif($2,$2,$1)
+  w+ $iif($2,$1,$nick) tutorial.complete 0
+}
+
+;; ------------------------------------------------------------------------------------------- Aliases Importados
+;
+; user.historico.combates    - retorna o número de combates
+; user.historico.narradas    - retorna o numero de narracoes
+; user.treino.normal         - retorna a data do ultimo treino mormal do usuario
+; user.treino.santuario      - retorna a data do ultimo treino no santuario do usuario
+; user.cosmo.add <n>         - adiciona <n> de cosmo na conta do usuário
+; user.dinheiro.add <n>      - adiciona <n> de dinheiro na conta do usuário
+; user.meritos.add <n>       - adiciona <n> méritos na conta do usuário
+;
+;; ------------------------------------------------------------------------------------------- Eventos
+
+on $*:text:/^[!+]aura/iS:#:if ($user.tutorial.match(13)) user.tutorial.complete
+on *:chat:*: {
+  if ($user.tutorial) {
+    if     ($strip($1-) = !Ajuda)               && ($user.tutorial.match(1)) user.tutorial.complete
+    elseif ($strip($1-) = !Faq)                 && ($user.tutorial.match(2)) user.tutorial.complete
+    elseif ($strip($1-) = !Dados)               && ($user.tutorial.match(3)) user.tutorial.complete
+    elseif ($strip($1-) = !Loja)                && ($user.tutorial.match(4)) user.tutorial.complete
+    elseif ($strip($1-) = !Info Espada Pequena) && ($user.tutorial.match(5)) user.tutorial.complete
+    elseif ($strip($1-) = !Treinos)             && ($user.tutorial.match(6)) user.tutorial.complete
+    elseif ($strip($1-) = !Dados)               && ($user.tutorial.match(9)) user.tutorial.complete
+    elseif ($strip($1-) = @Comer Maçã)          && ($user.tutorial.match(10)) user.tutorial.complete
+    elseif ($strip($1-) = !Méritos)             && ($user.tutorial.match(11)) user.tutorial.complete
+    elseif ($strip($1-) = !Meritos)             && ($user.tutorial.match(11)) user.tutorial.complete
+    elseif ($strip($1-) = !Quiz)                && ($user.tutorial.match(12)) user.tutorial.complete
+    elseif ($strip($1-) = !Armaduras)           && ($user.tutorial.match(14)) user.tutorial.complete
+  }
+  if ($strip($1-) == !Mestre Ancião || $strip($1-) == !Mestre Anciao) {
+    id.check =
+    msgtopo
+    msgt 8,1           .           
+    msgt 8,1      .´'´' '`'`.      
+    msgt 8,1    .´_.'''''''._`.    
+    msgt 8,1    \6/\/ 0__ __6 \/\8/    
+    msgt 0,1     6\/\  12o o  6/\/     
+    msgt 0,1        ||_6v0_||        
+    msgt 0,1        \ 6---0 /        
+    msgt 10,1       / 0|___|10 \       
+    msgt 10,1      / \     / \      
+    msgt 10,1     /   \   /   \     
+    msgt 10,1    /    /6\_/10\    \    
+    msgt 10,1    \___\6__86__10/___/    
+    msgt 10,1     \____6b.d10____/     
+    msgt 
+    if ($user.tutorial == $null) {
+      msgt 0Olá,7 $nick $+ 0!
+      msgt 0Seja bem vindo ao 11Mundo CdzForever0!
+      msgt 
+      msgt Boa sorte na sua jornada para ser um Cavaleiro
+      msgt e lutar por seu deus.
+      msgt 
+      msgt 0Como você é iniciante, ajudarei com algumas dicas!
+      msgt 
+      msgt Sempre que acabar de seguir cada dica com sucesso,
+      msgt digite 7!0Mestre Ancião15 para uma nova dica.
+      msgt 
+      msgt 081ª Dica:0 Todos os comandos do jogo, estão listados
+      msgt 0no 7!0Ajuda
+      msgt 0Sempre que esquecer um comando, vá lá.
+      msgt 
+      msgt Digite:7 !0Ajuda
+      user.tutorial.set 1
+    }
+    elseif ($user.tutorial = 1) {
+      if ($user.tutorial.completion) {
+        msgt 0Muito Bem! Você já passou pela primeira dica.
+        msgt 
+        msgt 11Seu prêmio:0 100 de cosmo.
+        msgt 
+        msgt 082ª Dica:0 O SaintSeiya é um bot de lutas
+        msgt 0narradas, ou seja, são lutas entre dois cavaleiros
+        msgt 0onde um narrador avalia os ataques e narra a luta.
+        msgt 
+        msgt Para melhor entendimento, leia atentamente o 0FAQ15,
+        msgt onde está explicado detalhadamente todas as regras
+        msgt do jogo.
+        msgt 
+        msgt 0Digite 7!0Faq
+        user.tutorial.set 2
+        user.cosmo.add 100
+      }
+      else {
+        msgt 04ERRO:0 Você ainda não completou a 1º Dica.
+        msgt 
+        msgt 081ª Dica:0 Todos os comandos do jogo, estão listados
+        msgt 0no 7!0Ajuda
+        msgt 0Sempre que esquecer um comando, vá lá.
+        msgt 
+        msgt Digite:7 !0Ajuda
+      }
+    }
+    elseif ($user.tutorial = 2) {
+      if ($user.tutorial.completion) {
+        msgt 0Muito Bem! Você já passou pela segunda dica.
+        msgt 
+        msgt 11Seu prêmio:0 100 de dinheiro.
+        msgt 
+        msgt 083ª Dica:0 Bom... todos tem uma ficha com seus
+        msgt dados. Você pode ver seus dados ou de outros
+        msgt usuários.
+        msgt 
+        msgt 0Digite 7!0Dados
+        user.tutorial.set 3
+        user.dinheiro.add 100
+      }
+      else {
+        msgt 04ERRO:0 Você ainda não completou a 2º Dica.
+        msgt
+        msgt 082ª Dica:0 O SaintSeiya é um bot de lutas
+        msgt 0narradas, ou seja, são lutas entre dois cavaleiros
+        msgt 0onde um narrador avalia os ataques e narra a luta.
+        msgt 
+        msgt Para melhor entendimento, leia atentamente o 0FAQ15,
+        msgt onde está explicado detalhadamente todas as regras
+        msgt do jogo.
+        msgt 
+        msgt 0Digite 7!0Faq
+      }
+    }
+    elseif ($user.tutorial = 3) {
+      if ($user.tutorial.completion) {
+        msgt 0Muito Bem! Você já passou pela terceira dica.
+        msgt 
+        msgt 11Seu prêmio:0 100 de cosmo.
+        msgt 
+        msgt 084ª Dica:15 O SaintSeiya tem uma loja onde são
+        msgt vendidos alimentos, equipamentos pra luta e
+        msgt pra treinos.
+        msgt 
+        msgt 0Digite 7!0Loja
+        user.tutorial.set 4
+        user.cosmo.add 100
+      }
+      else {
+        msgt 04ERRO:0 Você ainda não completou a 3º Dica.
+        msgt
+        msgt 083ª Dica:0 Bom... todos tem uma ficha com seus
+        msgt 0dados. Você pode ver seus dados ou de outros
+        msgt 0usuários.
+        msgt 
+        msgt 0Digite 7!0Dados
+      }
+    }
+    elseif ($user.tutorial = 4) {
+      if ($user.tutorial.completion) {
+        msgt 0Muito Bem! Você já passou pela quarta dica.
+        msgt 
+        msgt 11Seu prêmio:0 100 de dinheiro.
+        msgt 
+        msgt 085ª Dica:15 Você pode ver a descrição dos itens
+        msgt através do comando !Info <Item>
+        msgt 
+        msgt 0Digite 7!0Info Espada Pequena
+        user.tutorial.set 5
+        user.dinheiro.add 100
+      }
+      else {
+        msgt 04ERRO:0 Você ainda não completou a 4º Dica.
+        msgt
+        msgt 084ª Dica:15 O SaintSeiya tem uma loja onde são
+        msgt vendidos alimentos, equipamentos pra luta e
+        msgt pra treinos.
+        msgt 
+        msgt 0Digite 7!0Loja
+      }
+    }
+    elseif ($user.tutorial = 5) {
+      if ($user.tutorial.completion) {
+        msgt 0Muito Bem! Você já passou pela quinta dica.
+        msgt 
+        msgt 11Seu prêmio:0 100 de dinheiro.
+        msgt 
+        msgt 086ª Dica:15 Como todo cavaleiro, você além de lutar,
+        msgt pode treinar. Cada treino pode ser executado 1 vez
+        msgt por dia. Existem 3 tipos de treinos:
+        msgt 
+        msgt 001 - Treino Simples - Até 10x de Aura.
+        msgt 002 - Treino com Mestre - Treinos contra Cavaleiros.
+        msgt 003 - Treino com Equipamento - Necessita-se de Pesos.
+        msgt 
+        msgt 0Digite 7!0Treinos
+        user.tutorial.set 6
+        user.dinheiro.add 100
+      }
+      else {
+        msgt 04ERRO:0 Você ainda não completou a 5º Dica.
+        msgt
+        msgt 085ª Dica:15 Você pode ver a descrição dos itens
+        msgt através do comando !Info <Item>
+        msgt 
+        msgt 0Digite 7!0Info Espada Pequena
+      }
+    }
+    elseif ($user.tutorial = 6) {
+      if ($user.tutorial.completion) {
+        msgt 0Muito Bem! Você já passou pela sexta dica.
+        msgt 
+        msgt 11Seu prêmio:0 100 de cosmo.
+        msgt 
+        msgt 087ª Dica:15 Agora execute seu treino simples diário.
+        msgt 
+        msgt 0Digite 7!0Treinar
+        user.tutorial.set 7
+        user.cosmo.add 100
+      }
+      else {
+        msgt 04ERRO:0 Você ainda não completou a 6º Dica.
+        msgt
+        msgt 086ª Dica:15 Como todo cavaleiro, você além de lutar,
+        msgt pode treinar. Cada treino pode ser executado 1 vez
+        msgt por dia. Existem 3 tipos de treinos:
+        msgt 
+        msgt 001 - Treino Simples - Até 10x de Aura.
+        msgt 002 - Treino com Mestre - Treinos contra Cavaleiros.
+        msgt 003 - Treino com Equipamento - Necessita-se de Pesos.
+        msgt 
+        msgt 0Digite 7!0Treinos
+      }
+    }
+    elseif ($user.tutorial = 7) {
+      if ($ctime($user.treino.normal) <= $ctime && !$user.treino.active) {
+        msgt 0Muito Bem! Você já passou pela sétima dica.
+        msgt 
+        msgt 11Seu prêmio:0 100 de dinheiro.
+        msgt 
+        msgt 088ª Dica:15 Agora execute seu treino com Mestre diário.
+        msgt (espere o treino acabar)
+        msgt 
+        msgt 0Digite 7!0Treinar Santuário
+        user.tutorial.set 8
+        user.dinheiro.add 100
+      }
+      else {
+        msgt 04ERRO:0 Você ainda não completou a 7º Dica.
+        msgt
+        msgt 087ª Dica:15 Agora execute seu treino simples diário.
+        msgt (espere o treino acabar)
+        msgt 
+        msgt 0Digite 7!0Treinar
+      }
+    }
+    elseif ($user.tutorial = 8) {
+      if ($ctime($user.treino.santuario) <= $ctime && !$user.treino.active) {
+        msgt 0Muito Bem! Você já passou pela oitava dica.
+        msgt 
+        msgt 11Seu prêmio:0 200 de cosmo.
+        msgt 
+        msgt 089ª Dica:15 O Cavaleiro tem um vigor que mede o
+        msgt nivel de cansaço. Você pode controlá-lo nos
+        msgt seus dados. Para aumentá-lo é preciso se alimentar.
+        msgt Para ver seu vigor atual,
+        msgt
+        msgt 0Digite 7!0Dados
+        user.tutorial.set 9
+        user.cosmo.add 200
+      }
+      else {
+        msgt 04ERRO:0 Você ainda não completou a 8º Dica.
+        msgt
+        msgt 088ª Dica:15 Agora execute seu treino com Mestre diário.
+        msgt (espere o treino acabar)
+        msgt 
+        msgt 0Digite 7!0Treinar Santuário
+      }
+    }
+    elseif ($user.tutorial = 9) {
+      if ($user.tutorial.completion) {
+        msgt 0Muito Bem! Você já passou pela nona dica.
+        msgt 
+        msgt 11Seu prêmio:0 200 de dinheiro.
+        msgt 
+        msgt 0810ª Dica:15 Agora, para aumentar seu vigor,
+        msgt visite a Lanchonete e coma algo.
+        msgt 
+        msgt 0Digite 7@0Comer Maçã
+        user.tutorial.set 10
+        user.dinheiro.add 200
+      }
+      else {
+        msgt 04ERRO:0 Você ainda não completou a 9º Dica.
+        msgt
+        msgt 089ª Dica:15 O Cavaleiro tem um vigor que mede o
+        msgt nivel de cansaço. Você pode controlá-lo nos
+        msgt seus dados. Para aumentá-lo é preciso se alimentar.
+        msgt Para ver seu vigor atual,
+        msgt
+        msgt 0Digite 7!0Dados
+      }
+    }
+    elseif ($user.tutorial = 10) {
+      if ($user.tutorial.completion) {
+        msgt 0Muito Bem! Você já passou pela décima dica.
+        msgt 
+        msgt 11Seu prêmio:0 100 de dinheiro.
+        msgt 
+        msgt 0811ª Dica:15 Além do dinheiro e do cosmos, exite
+        msgt outro item que pode ser ganho através de eventos
+        msgt no canal: Os méritos.
+        msgt 
+        msgt 0Digite 7!0Méritos
+        user.tutorial.set 11
+        user.dinheiro.add 100
+      }
+      else {
+        msgt 04ERRO:0 Você ainda não completou a 10º Dica.
+        msgt
+        msgt 0810ª Dica:15 Agora, para aumentar seu vigor,
+        msgt visite a Lanchonete e coma algo.
+        msgt 
+        msgt 0Digite 7@0Comer Maçã
+      }
+    }
+    elseif ($user.tutorial = 11) {
+      if ($user.tutorial.completion) {
+        msgt 0Muito Bem! Você já passou pela décima primeira dica.
+        msgt 
+        msgt 11Seu prêmio:0 100 Méritos.
+        msgt 
+        msgt 0812ª Dica:15 Existe um sistema automático de Quiz no
+        msgt jogo pra medir seu nível de conhecimento sobre os
+        msgt Cavaleiros do Zodíaco. Mas você tem que ser rápido,
+        msgt pois o tempo pra resposta é curta. Você é prêmiado
+        msgt com méritos por resposta certa. Também é diário.
+        msgt 
+        msgt 0Digite 7!0Quiz
+        user.tutorial.set 12
+        user.meritos.add 100
+      }
+      else {
+        msgt 04ERRO:0 Você ainda não completou a 11º Dica.
+        msgt
+        msgt 0811ª Dica:15 Além do dinheiro e do cosmos, exite
+        msgt outro item que pode ser ganho através de eventos
+        msgt no canal: Os méritos.
+        msgt 
+        msgt 0Digite 7!0Méritos
+      }
+    }
+    elseif ($user.tutorial = 12) {
+      if ($user.tutorial.completion) {
+        msgt 0Muito Bem! Você já passou pela décima segunda dica.
+        msgt 
+        msgt 11Seu prêmio:0 100 de dinheiro.
+        msgt 
+        msgt 0813ª Dica:15 Aura mede a capacidade do cavaleiro em 
+        msgt queimar e multiplicar o poder de seu cosmo. Ela
+        msgt será muito importante na sua jornada no
+        msgt Mundo CdzForever.
+        msgt 
+        msgt 0Digite no Canal 7!0Aura
+        msgt 0Digite no Canal 7+0Aura
+        user.tutorial.set 13
+        user.dinheiro.add 100
+      }
+      else {
+        msgt 04ERRO:0 Você ainda não completou a 12º Dica.
+        msgt
+        msgt 0812ª Dica:15 Existe um sistema automático de Quiz no
+        msgt jogo pra medir seu nível de conhecimento sobre os
+        msgt Cavaleiros do Zodíaco. Mas você tem que ser rápido,
+        msgt pois o tempo pra resposta é curta. Você é prêmiado
+        msgt com méritos por resposta certa. Também é diário.
+        msgt 
+        msgt 0Digite 7!0Quiz
+      }
+    }
+    elseif ($user.tutorial = 13) {
+      if ($user.tutorial.completion) {
+        msgt 0Muito Bem! Você já passou pela décima terceira dica.
+        msgt 
+        msgt 11Seu prêmio:0 100 de Cosmo.
+        msgt 
+        msgt 7"0Ah! Como esqueci desse detalhe tão importante!?!7"
+        msgt 
+        msgt 0814ª Dica:15 Ao atingir a aura 2x, você poderá escolher
+        msgt uma armadura classe D. Para as outras classes, será
+        msgt preciso o desbloqueio com uso de méritos.
+        msgt 
+        msgt 0Digite 7!0Armaduras
+        user.tutorial.set 14
+        user.cosmo.add 100
+      }
+      else {
+        msgt 04ERRO:0 Você ainda não completou a 13º Dica.
+        msgt
+        msgt 0813ª Dica:15 Aura mede a capacidade do cavaleiro em 
+        msgt queimar e multiplicar o poder de seu cosmo. Ela
+        msgt será muito importante na sua jornada no
+        msgt Mundo CdzForever.
+        msgt 
+        msgt 0Digite no Canal 7!0Aura
+        msgt 0Digite no Canal 7+0Aura
+      }
+    }
+    elseif ($user.tutorial = 14) {
+      if ($user.tutorial.completion) {
+        msgt 0Muito Bem! Você já passou pela décima quarta dica.
+        msgt 
+        msgt 11Seu prêmio:0 100 de dinheiro.
+        msgt 
+        msgt 0815ª Dica:15 Pronto. Você já parece estar apto a enfrentar
+        msgt outros usuários numa luta. As lutas acontecem nos canais
+        msgt específicos -> #CdzSekai / #CdzMeikai / #CdzTenkai /
+        msgt #CdzKaikai / #CdzMakai
+        msgt 
+        msgt 0Participe de um rodízio. Lute e Narre pelo menos 1 luta.
+        user.tutorial.set 15
+        user.dinheiro.add 100
+      }
+      else {
+        msgt 04ERRO:0 Você ainda não completou a 14º Dica.
+        msgt
+        msgt 0814ª Dica:15 Ao atingir a aura 2x, você poderá escolher
+        msgt uma armadura classe D. Para as outras classes, será
+        msgt preciso o desbloqueio com uso de méritos.
+        msgt 
+        msgt 0Digite 7!0Armaduras
+      }
+    }
+    elseif ($user.tutorial = 15) {
+      if ($user.historico.combates && $user.historico.narradas) {
+        msgt 0Parabéns. Você já tem todas as dicas pra começar a sua
+        msgt 0jornada no Mundo CdzForever. Sempre que tiver uma dúvida,
+        msgt 0leia nosso faq (!Faq).
+        msgt 
+        msgt 11Seu prêmio por completar as dicas, é de:
+        msgt 500 de Cosmo
+        msgt 500 de Dinheiro
+        msgt 500 de Mérito
+        msgt 
+        user.tutorial.set 0
+        user.dinheiro.add 500
+        user.cosmo.add 500
+        user.meritos.add 500
+      }
+      else {
+        msgt 04ERRO:0 Você ainda não completou a 15º Dica.
+        msgt
+        msgt 0815ª Dica:15 Pronto. Você já parece estar apto a enfrentar
+        msgt outros usuários numa luta. As lutas acontecem nos canais
+        msgt específicos -> #CdzSekai / #CdzMeikai / #CdzTenkai /
+        msgt #CdzKaikai / #CdzMakai
+        msgt 
+        msgt 0Participe de um rodízio. Lute e Narre pelo menos 1 luta.
+      }
+    }
+    else {
+      msgt 0Parabéns. Você já tem todas as dicas pra começar a sua
+      msgt 0jornada no 8Mundo CdzForever15. Sempre que tiver uma dúvida,
+      msgt 0leia nosso faq (11!Faq15).
+    }
+    msgbase
+  }
+}

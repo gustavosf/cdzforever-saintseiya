@@ -1,0 +1,120 @@
+alias -l be.init {
+if ($sock(bedt)) sockclose bedt
+socklisten bedt 52446
+be.echo Bot.Editor inicializado
+hmake bot.editor
+}
+alias -l sw { sockwrite -nt $sockname $1- }
+alias -l sm {
+if ($1) { sockmark $sockname $1- }
+else { return $sock($sockname).mark }
+}
+alias -l be.echo {
+if (!$window(@bot.editor)) window -n @bot.editor
+aline @bot.editor 3BE 1>> $1-
+}
+alias -l be.recv echo -s 4BE 1<< $1-
+alias -l be.send echo -s 3BE 1>> $1-
+on *:start:be.init
+on *:socklisten:bedt:{
+var %x = be.conn. $+ $rand(11111,99999)
+while ($sock(%x)) %x = be.conn. $+ $rand(11111,99999)
+sockaccept %x
+sockmark %x 0
+}
+on *:sockread:be.conn.*:{
+sockread %s | tokenize 32 %s
+;be.recv $1-
+;; usuário não-identificado
+if (!$sm) {
+if ($1 = AUTH) {
+var %a = $decode($2,m)
+var %n = $gettok(%a,1,32)
+var %p = $gettok(%a,2,32)
+if ($dados(%n,senha) == %p) {
+if (b isin $dados(%n,oper,access)) { be.echo %n conectado | sm 1 %n | sw HELLO }
+else { sw ERR 02 Usuário não possui acesso a editar o bot | sockclose $sockname }
+}
+else { sw ERR 01 Usuário e senha não conferem | sockclose $sockname }
+}
+}
+;; usuário identificado
+else {
+var %stat = $gettok($sm,1,32)
+if (%stat = 1) {
+if ($1 = GETSCRIPTS) {
+sw SCRIPTS:
+var %x = $script(0)
+while (%x) {
+sw %x $script(%x)
+dec %x
+}
+sw :SCRIPTS
+}
+if ($1 = GETALIASES) {
+sw ALIASES:
+var %x = $alias(0)
+while (%x) {
+sw %x $alias(%x)
+dec %x
+}
+sw :ALIASES
+}
+if ($1 = GETBACKUPS) {
+sw BACKUPS:
+var %x = $findfile(sys/bkp/,*,0)
+while (%x) {
+sw %x $findfile(sys/bkp/,*,%x)
+dec %x
+}
+sw :BACKUPS
+}
+if ($1 = SELECT) {
+;var %s = $script($2)
+var %s = $2
+sm $gettok($sm,1-2,32) %s
+sw SELECTED:
+if ($isfile($shortfn(%s))) {
+var %x = $lines($shortfn(%s)),%i = 1,%l
+while (%i <= %x) { sw $read($shortfn(%s),n,%i) | inc %i }
+}
+sw :SELECTED
+;sw :INFO: %s $chr(9) $file(%s).size $chr(9) $file(%s).ctime $chr(9) $file(%s).mtime $chr(9) $file(%s).atime
+be.echo $gettok($sm,2,32) requested $nopath(%s)
+}
+if ($1 = SAVE:) {
+write -c $gettok($sm,3-,32)
+sm 2 $gettok($sm,2-,32)
+}
+}
+elseif (%stat = 2) {
+if ($1 = :SAVE) {
+var %file = $gettok($sm,3-,32)
+.rename %file $+($mircdirsys/bkp/,$ctime,.,$gettok($sm,2,32),.,$nopath(%file))
+.rename $scriptdirbe.tmp %file
+sw SAVED $nopath(%file)
+be.echo $gettok($sm,2,32) saved $nopath(%file)
+.load -rs %file
+sm 1 $gettok($sm,2,32)
+}
+else write $scriptdirbe.tmp $decode($1-,m)
+}
+}
+if ($1 = GET) {
+dcc send $gettok($sm,2,32) $gettok($sm,3-,32)
+be.echo Enviando $nopath($gettok($sm,3-,32)) para $gettok($sm,2,32)
+}
+if ($1 = EVAL) {
+sw :ECHO: $sockname evalute: $eval($2,2)
+be.echo $gettok($sm,2,32) evalutes $2
+}
+if ($1 = RUN) {
+$2-
+sw :ECHO: $sockname run: $2-
+be.echo $gettok($sm,2,32) runs $2-
+}
+if ($1 == BYE) {
+be.echo $gettok($sm,2,32) desconectado
+sockclose $sockname
+}
+}

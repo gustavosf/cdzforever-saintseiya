@@ -1,0 +1,100 @@
+;; Handlers
+;; ¯¯¯¯¯¯¯¯
+;; com_chat_* = comando de chat
+;; com_pvt_* = comando no pvt
+;; com_chan_* = comando de canal
+;; com_all_* = comando no canal ou no pvt
+;;
+;;
+;; Vantagens :)
+;; ¯¯¯¯¯¯¯¯¯
+;; Permite fácil inserção de comandos no bot, precisando apenas carregar
+;; um remote ou alias que siga o padrão citado acima.
+;;
+;; Permite descobrir facilmente o arquivo aonde o comando está, através
+;; do comando $isalias(<comando>).fname
+;;
+;; Permite saber se o comando que o cara digitou não existe no bot, se
+;; todos os comandos fossem desse jeito... pelo $isalias
+;;
+;; etc...
+on *:chat:*:{
+  tokenize 32 $strip($1-)
+  if ($istok(%com_bloqueado,$1,32)) { noticen Comando8 $1 15está 4bloqueado15! | halt }
+  var %com = $+(com_chat_,$1)
+  if ($isalias(%com)) %com $2-
+  else {
+    var %com = $+(com_chat_,$replace($1-,$chr(32),_))
+    if ($isalias(%com)) %com $2-
+  }
+  halt
+  :error
+  $errorhandler($error,$nick,CHAT,%com,$2-)
+  reseterror
+}
+on *:text:*:?:{
+  if ($nick ison #cdzforever) {
+    tokenize 32 $strip($1-)
+    if ($istok(%com_bloqueado,$1,32)) noticen Comando8 $1 15está 4bloqueado15!
+    else {
+      var %com = $+(com_pvt_,$1),%com2 = $+(com_all_,$1)
+      if ($isalias(%com)) %com $2-
+      elseif ($isalias(%com2)) %com2 $2-
+    }
+  }
+  halt
+  :error
+  if ($isalias(%com)) %c = %com
+  else %c = %com2
+  $errorhandler($error,$nick,PVT,%c,$2-)
+  reseterror
+}
+on *:text:*:#:{
+  if ($nick ison #cdzforever) {
+    tokenize 32 $strip($1-)
+    if ($istok(%com_bloqueado,$1,32)) noticen Comando8 $1 15está 4bloqueado15!
+    else {
+      var %com = $+(com_chan_,$1),%com2 = $+(com_all_,$1)
+      if ($isalias(%com)) {
+        if ($left($1,1) == - && $oplv($nick).real != sega) noticen Comandos com 14"9-14"15 são 0exclusivos 15do 8sega15.
+        else %com $2-
+      }
+      elseif ($isalias(%com2)) %com2 $2-
+    }
+  }
+  halt
+  :error
+  if ($isalias(%com)) %c = %com
+  else %c = %com2
+  $errorhandler($error,$nick,$chan,%c,$2-)
+  reseterror
+}
+
+alias com_chan_!testaerro {
+  msg #cdzforever
+}
+
+alias errorhandler {
+  if (!$window(@error)) window -n @error
+  var %time = $date(dd/mm hh:nn)
+  aline @error %time :: Erro em $4
+  aline @error %time :: Usado por $2 em $3
+  aline @error %time :: Args: $iif($5 != $null,$5,Nenhum)
+  aline @error %time :: Msg: $1
+  aline @error ------------------------------------------------------------------------------
+}
+
+;; para controle de flood em determinados comandos...
+;; uso: flood.control <num_repeticoes_max> <tempo_delay> <id_comando>
+;; verifica se tem <num_repeticoes_max> timers setados com o <tempo_delay>, se tiver dá halt
+alias flood.control {
+  var %i = $timer(0)
+  var %r = /^\.flood\. $+ $3 $+ \.[0-9]+$/i
+  var %x = 0
+  while (%i) {
+    if ($regex($timer(%i),%r)) inc %x
+    dec %i
+  }
+  if (%x >= $1) halt
+  $+(.timer.flood.,$3,.,$ctime) 1 $2 noop
+}

@@ -1,0 +1,20 @@
+alias com_chan_!rastrear com_chan_!rastreio $1-
+alias com_chan_!rastreio {
+  if ($chan != #cdzforever) return
+  if (!$1) msgehalt Você precisa indicar o 0código 15da encomenda. 0,14 15,1 Ex: 9!Rastreio PB399286323BR
+  site_get_contents http://correios.hawha.us/rastreamentoirc/ $+ $1 rastreio.callback.read
+}
+
+alias rastreio.callback.read {
+  if ($numtok($1-,59) > 1) {
+    tokenize 59 $1-
+    var %msg = Correios14/9SRO 0,14 0,1 $1 14->15 
+    if ($2 == Erro) %msg = %msg $3-
+    else {
+      %msg = %msg Origem:8 $2 $+ 15, Tipo:8 $capitalize($3) 0,14 15,1 
+      if ($4) %msg = %msg Última Atualização 14->9 $4 14<-0 $5 $+ 14,15 Status:8 $6
+      else %msg = %msg Pacote ainda não se encontra no sistema.
+    }
+    msgto #cdzforever %msg
+  }
+}

@@ -1,0 +1,243 @@
+;; Cores ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+c1 return 00,01 00,14 15,01
+c2 return 00,14 00,01 
+c1d return 00,01 00,14 15,14
+c2d return 00,14 00,01 
+
+;; Aliases para Canal ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+msgn .msg $iif($chan,$chan,$nick) $c1 $1- $c2
+msgto .msg $1 $c1 $2- $c2
+noticen .notice $nick $c1 $1- $c2
+noticeto .notice $1 $c1 $2- $c2
+
+;; Mensagem especial que avalia se o usuário está no chat antes de enviar
+msgs {
+  if ($chat($1)) {
+    var %x = 1
+    while (%x <= $numtok($2-,188)) { xmsgt+ $1 $gettok($2-,%x,188) | inc %x }
+  }
+  else msgto $1 $replace($2-,¼,$chr(32))
+}
+msgstopo if ($chat($1)) { msgtopo+ $1 }
+msgsbase if ($chat($1)) { msgbase+ $1 }
+
+
+;; Aliases para Erros ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+msge {
+  if ($target == $me || $left($target,1) == $chr(35)) {
+    .noticen 4Erro 14::15 $replace($1-,$chr(188),$chr(160))
+  }
+  else {
+    msgtopo 
+    msgt 4Erro 
+    msgt 14¯¯¯¯ 
+    var %i = 1
+    while (%i <= $numtok($1-,188)) { xmsgt $gettok($1-,%i,188)  | inc %i }
+    msgbase 
+  }
+}
+msgehalt { 
+  if ($target == $me || $left($target,1) == $chr(35)) {
+    .noticen 4Erro 14::15 $replace($1-,$chr(188),$chr(160))
+  }
+  else {
+    msgtopo 
+    msgt 4Erro 
+    msgt 14¯¯¯¯ 
+    var %i = 1
+    while (%i <= $numtok($1-,188)) { xmsgt $gettok($1-,%i,188)  | inc %i }
+    msgbase 
+  }
+  halt
+}
+
+;; Aliases para o Chat (compatibilidade) ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; cor padrão
+msgt xmsg $nick $1-
+msgl xmsg -l $nick $1-
+msgr xmsg -r $nick $1-
+msgdiv xmsgtb $nick div
+msgtopo xmsgtb $nick topo
+msgbase xmsgtb $nick base
+
+;; cor padrão, indicando o destino
+msgt+ xmsg $1 $2-
+msgl+ xmsg -l $1 $2-
+msgr+ xmsg -r $1 $2-
+msgdiv+ xmsgtb $1 div
+msgtopo+ xmsgtb $1 topo
+msgbase+ xmsgtb $1 base
+
+;; cor padrão, múltiplas linhas
+xmsgt xmsg $nick $1-
+xmsgl xmsg -l $nick $1-
+xmsgr xmsg -r $nick $1-
+xmsgt+ xmsg $1 $2-
+xmsgt+ xmsg $1 $2-
+xmsgt+ xmsg $1 $2-
+
+;; fundo vermelho
+redmsgt xmsg -d0f0b4 $nick $1-
+redmsgl xmsg -ld0f0b4 $nick $1-
+redmsgr xmsg -rd0f0b4 $nick $1-
+redmsgtopo xmsgtb -d0f0b4 $nick topo
+redmsgbase xmsgtb -d0f0b4 $nick base
+redmsgdiv xmsgtb -d0f0b4 $nick div
+
+;; fundo interno cinza (usado nos dados e nas news)
+msgtd xmsg -i14f0 $nick $1-
+msgld xmsg -li14f0 $nick $1-
+msgrd xmsg -ri14f0 $nick $1-
+msgdivd xmsgtb -i14f0 $nick div
+
+;; tamanho maior
+msggt xmsg -s100 $nick $1-
+msggl xmsg -ls100 $nick $1-
+msggr xmsg -rs100 $nick $1-
+msggdiv xmsgtb -s100 $nick div
+msggtopo xmsgtb -s100 $nick topo
+msggbase xmsgtb -s100 $nick base
+
+;; outros
+msgat { var %len = $calc((56 - $len($strip($1-))) / 2) | msg = $+ $nick $c1 $str($chr(160),$round(%len,0)) $+ $1- $+ $str($chr(160),$int(%len)) $c2 }
+msgal { var %len = 56 - $len($strip($1-)) | msg = $+ $nick $c1 $1- $+ $str($chr(160),$int(%len)) $c2 }
+msgadiv { msg = $+ $nick 0,1 14,14_14,1__________________________________________________________14,14_0,1  | msgat }
+msgar { var %len = 56 - $len($strip($1-)) | msg = $+ $nick $c1 $str($chr(160),%len) $+ $1- $c2 }
+msgatopo { msg = $+ $nick 0,1                                                               | msg = $+ $nick 0,1 14,14¯14,1¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯14,14¯0,1  }
+msgabase { msg = $+ $nick 0,1 14,14¯0,1                                                          14,14¯0,1  | msg = $+ $nick 0,1 14,1¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯0,1  }
+
+msgblack msg = $+ $nick 0,1 $+ $str( ,63)
+
+;; Aliases Auxiliares ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+xwrap return $wrap($1,fixedsys,9,$calc(9 * ($2 - 5)),$3)
+ultima.cor {
+  var %par = $regex(ultima.cor,$1-,/([0-9]{1,2})/g) 
+  var %cor = $iif(%par,$regml(ultima.cor,%par))
+  return $iif(%cor >= 0, $+ $base(%cor,10,10,2))
+}
+
+;; Aliases Principais ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+xmsg {
+  ;; Envia uma mensagem formatada no bot
+  ;; Uso: xmsg -clrsNbNfNdNiN <nick> [texto]
+  ; 
+  ; c = alinhado no centro [padrão]
+  ; l = alinhado na esquerda
+  ; r = alinhado na direita
+  ; sN = tamanho interno da janela (sem bordas) [default=57]
+  ; bN = cor de fundo, onde N é a cor
+  ; fN = cor padrão da fonte, onde N é a cor
+  ; dN = cor de detalhe (barras laterais), onde N é a cor
+  ; iN = cor de fundo, da parte interna
+  ;
+  ;; default = -cs57b01f15d14
+
+  var %align = c
+  var %size = 57
+  var %bg = 01
+  var %fg = 15
+  var %dc = 14
+  var %ig = %bg
+
+  ;; definições do usuário
+  if ($left($1,1) == -) {
+    if ($regex(xmsg,$1,/^-.*([clr])/)) %align = $regml(xmsg,1)
+    if ($regex(xmsg,$1,/^-.*(s([0-9]+))/)) %size = $regml(xmsg,2)
+    if ($regex(xmsg,$1,/^-.*(b([0-9]{1,2}))/)) { %bg = $regml(xmsg,2) | %ig = %bg }
+    if ($regex(xmsg,$1,/^-.*(f([0-9]{1,2}))/)) %fg = $regml(xmsg,2)
+    if ($regex(xmsg,$1,/^-.*(d([0-9]{1,2}))/)) %dc = $regml(xmsg,2)
+    if ($regex(xmsg,$1,/^-.*(i([0-9]{1,2}))/)) %ig = $regml(xmsg,2)
+  }
+  else tokenize 32 - $1-
+
+  var %v = $chr(44)
+  var %c1 = $+(,%fg,%v,%bg, ,%fg,%v,%dc, ,%fg,%v,%ig, )
+  var %c2 = $+(,%fg,%v,%ig, ,%fg,%v,%dc, ,%fg,%v,%bg, )
+
+  var %spc,%l,%r
+  var %w = $xwrap($3-,%size,0),%i = 1,%cor = $+(,%fg)
+  if (!%w) %w = 1
+  while (%i <= %w) {
+    %t = $xwrap($3-,%size,%i)
+    %spc = $calc(%size - $len($strip(%t)))
+    if (%align == c) var %l = $ceil($calc(%spc / 2)),%r = $floor($calc(%spc / 2))
+    elseif (%align == l) var %l = 0,%r = %spc
+    else var %l = %spc,%r = 0
+    $+(msg =,$2 %c1,$str( ,%l),%cor,%t,$str( ,%r),%c2)
+    if ($ultima.cor(%t)) %cor = $v1
+    inc %i
+  }
+}
+
+xmsgtb {
+  ;; Envia uma mensagem formatada no chat, de topo, base ou divisória
+  ;; xmsg -sNbNfNdN <nick> <topo|base|div>
+  ;
+  ; sN = tamanho interno da janela (sem bordas) [default=57]
+  ; bN = cor de fundo, onde N é a cor
+  ; dN = cor de detalhe (barras laterais), onde N é a cor
+  ;
+  ;; default = -s57b01d14
+
+  var %size = 57,%bg = 01,%dc = 14
+
+  ; definições do usuário
+  if ($left($1,1) == -) {
+    if ($regex(xmsgtb,$1,/^-.*(s([0-9]+))/)) %size = $regml(xmsgtb,2)
+    if ($regex(xmsgtb,$1,/^-.*(b([0-9]{1,2}))/)) %bg = $regml(xmsgtb,2)
+    if ($regex(xmsgtb,$1,/^-.*(d([0-9]{1,2}))/)) %dc = $regml(xmsgtb,2)
+  }
+  else tokenize 32 - $1-
+  var %v = $chr(44)
+  if ($3 == topo) {
+    $+(msg =,$2 ,%dc,%v,%bg,$str( ,$calc(%size + 6)))
+    $+(msg =,$2 ,%dc,%v,%bg, ,%dc,%v,%dc,¯,,%dc,%v,%bg,$str(¯,$calc(%size + 2)),,%dc,%v,%dc, ,%dc,%v,%bg, )
+  }
+  elseif ($3 == base) {
+    $+(msg =,$2 ,%dc,%v,%bg, ,%dc,%v,%dc, ,%dc,%v,%bg,$str( ,$calc(%size + 2)),,%dc,%v,%dc, ,%dc,%v,%bg, )
+    $+(msg =,$2 ,%dc,%v,%bg, ,$str(¯,$calc(%size + 4)), )
+  }
+  elseif ($3 == div) {
+    $+(msg =,$2 ,%dc,%v,%bg, ,%dc,%v,%dc,¯,,%dc,%v,%bg,$str( ,$calc(%size + 2)),,%dc,%v,%dc, ,%dc,%v,%bg, )
+    $+(msg =,$2 ,%dc,%v,%bg, ,%dc,%v,%dc,¯,,%dc,%v,%bg,$str(¯,$calc(%size + 2)),,%dc,%v,%dc, ,%dc,%v,%bg, )
+  }
+}
+
+
+;; comandos antigos
+
+/*
+xmsg {
+  var %w = $xwrap($2-,0),%i = 1,%cor = 15
+  while (%i <= %w) {
+    %t = $xwrap($2-,%i)
+    $+(msg,$1) %cor $+ %t
+    if ($ultima.cor(%t)) %cor = $v1
+    inc %i
+  }
+}
+*/
+
+
+;; checa armaduras com donos inconsistentes
+checkarms {
+  var %x = $ini(armaduras.ini,0),%a
+  while (%x) {
+    %a = $ini(armaduras.ini,%x)
+    %n = $readini(armaduras.ini,%a,nick)
+    if (%n != Nenhum) {
+      if ($user.armadura(%n) != $readini(armaduras.ini,%a,arm)) {
+        echo -a Nick: %n Cadastro: $user.armadura(%n) Armaduras.ini: %a
+        ;; %a deve ser escrito no cadastro
+        user.armadura.give %n %a 
+      }
+    }
+    dec %x
+  }
+}

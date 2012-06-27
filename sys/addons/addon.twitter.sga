@@ -1,0 +1,92 @@
+;; --------------------------------------------------------------------------------------------- ABOUT
+;;
+;; Comando feito por sega, em Fevereiro/2010
+;; Proibida a reprodução por rippers dos canais rivais (ouviu first?)
+;;
+;; --------------------------------------------------------------------------------------------- FIX ALIASES
+
+alias -l fixxml { var %a | noop $regsub($1-,/<[^<>]+>/g,,%a) | return %a }
+;alias -l fixtxt return $regsubex($1-,/&#([0-9]+);/g,$chr(\1))
+alias -l fixtxt return $1-
+
+alias -l sw { sockwrite -nt $sockname $1- }
+alias -l twitSet sockmark $twitOpen $1-
+
+alias -l twitOpen {
+  var %x = $+(twit.,$rand(10000,99999))
+  while ($sock(%x)) %x = $+(twit.,$rand(10000,99999))
+  sockopen %x cdzforever.net 80
+  return %x
+}
+
+;; --------------------------------------------------------------------------------------------- SOCKETS
+
+on *:sockopen:twit.*:{
+  tokenize 32 $sock($sockname).mark
+  var %param = $+(com=,$1,$iif($2,& $+ $2-))
+  %param = $replace(%param,$chr(32),$chr(37) $+ 20)
+  sw GET /saintseiya_handlers/twit/twit.php? $+ %param HTTP/1.1
+  ;sw Authorization: Basic Y2R6NGV2ZXI6Y2R6NHR3aXQ=
+  sw Host: cdzforever.net
+  ;sw Accept: */*
+  ;sw Content-Length: $len(%param)
+  ;sw Content-Type: application/x-www-form-urlencoded
+  ;sw 
+  ;sw %param
+  sw
+}
+on *:sockread:twit.*:{
+  sockread %a | tokenize 32 %a
+  var %type = $sock($sockname).mark
+
+  if (followers isin %type) {
+    if (<users* iswm $1-) {
+      hadd -m twit users 0
+      hadd twit user
+    }
+    if (<screen_name>* iswm $1-) {
+      hinc twit users
+      hadd twit user $addtok($hget(twit,user),$fixxml($1-),44)
+    }
+  }
+  if (mention isin %type) {
+    if (<text>* iswm $1-) hadd -m twit text $fixxml($1-)
+    if (<screen_name>* iswm $1-) hadd -m twit user $fixxml($1-)
+    if (</status>* iswm $1-) echo -a @ $+ $hget(twit,user) $+ : $fixtxt($hget(twit,text))
+  }
+}
+
+;; --------------------------------------------------------------------------------------------- SUBCOMANDOS
+
+alias twit { twit.post $1- }
+alias twit.post twitSet post $+(content=,$1-)
+;alias twit.get twitSet /direct_messages.xml
+;alias twit.followers twitSet /statuses/followers.xml
+;alias twit.follow twitSet /friendships/create/ $+ $1 $+ .xml
+;alias twit.mentions twitSet /statuses/mentions.xml
+
+;; --------------------------------------------------------------------------------------------- COMANDOS
+
+alias com_@twit {
+  if ($1 == post) {
+    var %msg = $2- ( $+ $nick $+ )
+    if ($len(%msg) <= 140) twit.post %msg
+  }
+}
+
+;; --------------------------------------------------------------------------------------------- HANDLERS
+
+on *:input:*:{
+  tokenize 32 $1-
+  if ($isalias($+(com_,$1))) $+(com_,$1) $2-
+}
+off *:text:*:*:{
+  tokenize 32 $1-
+  if ($isalias($+(com_,$1))) $+(com_,$1) $2-
+}
+
+alias com_all_!twitt {
+  op.check @
+  twit $1- ( $+ $iif($user.perfil.twitter,@ $+ $v1,$nick) $+ )
+  msg #cdzforever 0,1 0,14 0,1 Twitter 8Atualizado0! 15Follow-us! 9http://twitter.cdzforever.net 0,14 0,1 
+}

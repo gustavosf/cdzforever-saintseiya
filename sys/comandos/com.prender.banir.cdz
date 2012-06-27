@@ -1,0 +1,60 @@
+;; aliases auxiliares...
+alias prisao {
+  if (!$prop) return $dados($iif($1,$1,$nick),prisao,soltura)
+  if ($prop = motivo) return $dados($iif($1,$1,$nick),prisao,motivo)
+  if ($prop = por) return $dados($iif($1,$1,$nick),prisao,por)
+}
+alias prisao.prender {
+  w* $1 prisao soltura $2
+  w* $1 prisao motivo $4-
+  w* $1 prisao por $3
+  msgto #cdzforever 09 $+ $3 15prendeu a conta de09 $1 15até09 $asctime($2,dd/mm/yyyy) 15@09 $asctime($2,H:n) $+ 15. Motivo:08 $4-
+  if ($chan && $chan != #cdzforever) msgto # 09 $+ $3 15prendeu a conta de09 $1 15até09 $asctime($2,dd/mm/yyyy) 15@09 $asctime($2,H:n)
+}
+alias prisao.soltar {
+  remini $dados($1) prisao
+  if ($chan) {
+    msgto #cdzforever 09 $+ $nick 15soltou a conta de04 $1 $+ 15...
+    if ($chan != #cdzforever) msgto # 09 $+ $nick 15soltou a conta de04 $1 $+ 15...
+  }
+  else msgto #cdzforever 09 $+ $1 15saiu da prisão...
+}
+
+;; comandos...
+alias com_chan_!prender {
+  op.check @
+  if (!$2) { noticen Sintaxe: !prender <nick> <dias> [motivo] | halt }
+  if ($2 !isnum) { noticen 09 $+ $2 15não é um numero valido | halt }
+  if ($dados($1,nick) == $null) { noticen 09 $+ $1 $+  15não está cadastrado. | halt }
+  prisao.prender $1 $calc($ctime + (86400 * $2)) $nick $iif(!$3,Não especificado,$3-)
+}
+alias com_chan_!soltar {
+  op.check @
+  if (!$1) { noticen Sintaxe: !soltar <nick> | halt }
+  if ($ctime > $prisao($1)) || ($prisao($1) == $null) { noticen 09 $+ $1 15não está preso | halt }
+  else prisao.soltar $1
+}
+alias com_chan_!prisão com_chan_!prisao $1-
+alias com_chan_!prisao {
+  var %nick = $iif($1,$1,$nick)
+  if (!$dados(%nick,nick)) { noticen 09 $+ %nick $+  15não está cadastrado. | halt }
+  elseif ($ctime > $prisao(%nick)) || ($prisao(%nick) == $null) { msgto # 09 $+ %nick 15não está preso | halt }
+  else {
+    msgto # 09 $+ %nick 15está preso 15até09 $asctime($prisao(%nick),dd/mm/yyyy) 15@09 $asctime($prisao(%nick),H:nn)
+    msgto # Motivo:09 $prisao(%nick).motivo 15Por:09 $prisao(%nick).por
+  }
+}
+
+;; eventos...
+on *:open:=: {
+  if ($prisao) {
+    if ($ctime < $prisao) {
+      msgtopo
+      msgt Sua conta está presa, você não pode acessar o bot até09 $asctime($prisao,dd/mm/yyyy) 15@09 $asctime($prisao,H:nn)
+      msgt Motivo:09 $prisao().motivo 15Por:09 $prisao().por
+      msgbase
+      close -c $nick
+    }
+    else prisao.soltar $nick
+  }
+}

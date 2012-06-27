@@ -1,0 +1,83 @@
+;; ALIASES ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+alias npc.msg sockwrite -nt npc PRIVMSG #cdzforever : $+ $1-
+alias npc.act sockwrite -nt npc PRIVMSG #cdzforever :ACTION $1- $+ 
+alias npc.server return $hget(npc,server)
+alias npc.nick return $hget(npc,nick)
+alias npc.cav return $hget(npc,cav)
+alias npc.arm return $hget(npc,arm)
+alias npc.init {
+  if (!$2) return
+  if ($hget(npc)) .hfree npc
+  hadd -m npc cav $1
+  hadd npc arm $2
+  hadd npc nick $+(_,$1)
+  if ($sock(npc)) sockclose npc
+  sockopen npc irc.cdzforever.net 7000
+  window @npc
+}
+
+alias npc.getTarget {
+  var %i = $nick(#cdzforever,0),%n
+  while (%i) {
+    if ($dados($nick(#cdzforever,%i),nick)) %n = $addtok(%nick,$nick(#cdzforever,%i),44)
+    dec %i
+  }
+  return $gettok(%n,$r(1,$numtok(%n,44)),44)
+}
+
+alias -l sw { aline @npc 3<< $1- | sockwrite -nt $sockname $1- }
+
+;; SOCKETS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+on *:sockread:npc:{
+  sockread %s
+  tokenize 32 %s
+  aline @npc 4>> $1-
+
+  if ($2 == 376) {
+    hadd npc server $1
+    sw JOIN #cdzforever
+  }
+  elseif ($2 == PING) sw PONG $2
+  elseif ($2 == PRIVMSG) {
+    var %nick = $mid($gettok($1,1,$asc(!)),2-)
+    var %chan = $3
+    tokenize 32 $strip($iif($left($4,1) == :,$mid($4-,2-),$4-)) 
+    if ($1 == $npc.cav $+ $chr(44)) {
+      if (%nick == sega) {
+        if ($2 == vai) {
+          sw QUIT :runs away!
+        }
+        if ($2-3 == ataque o) {
+          if ($4 ison #cdzforever) {
+            npc.act ataca $4 com destruição infinita!
+            var %v = $r(1000,1500)
+            .timer 1 2 msgto #cdzforever 8 $+ $4 0perde09 %v 15de vigor.0 $4 15está 4morto15.
+            user.vigor.retrieve $4 %v
+          }
+          else npc.msg Cadê ele?
+        }
+        if ($2-3 == cure o) {
+          if ($4 ison #cdzforever) {
+            npc.act eleva o seu cosmo divino, e com o poder do Cavaleiro de Sagitário cura $4 $+ .
+            var %v = 52
+            .timer 1 2 msgto #cdzforever 8 $+ $4 0recuperou09 %v 15de vigor.
+            user.vigor.add $4 %v
+          }
+          else npc.msg Cadê ele?
+        }
+      }
+      else npc.msg cale-se seu verme
+    }
+  }
+}
+
+alias com_npc_
+
+on *:sockopen:npc:{
+  sw NICK $npc.nick
+  sw USER $npc.cav "" "irc.cdzforever.net" :CdzForever
+  .timer.npc.ping 0 100 sockwrite -nt npc PING $npc.server
+}
+on *:sockclose:npc:.timer.npc.ping off

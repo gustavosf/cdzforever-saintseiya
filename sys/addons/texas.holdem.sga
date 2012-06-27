@@ -1,0 +1,63 @@
+.--------.
+|? _  _  |
+| ( \/ ) |
+|  \  /  |
+|   \/  ?|
+'--------'
+.--------.
+|?  /\   |
+|  /  \  |
+|  \  /  |
+|   \/  ?|
+'--------'
+.--------.
+|?  _    |
+|  ( )   |
+| (_x_)  |
+|   Y   ?|
+'--------'
+.--------.
+|?  .    |
+|  / \   |
+| (_,_)  |
+|   I   ?|
+'--------'
+
+alias cards return AC,AO,AP,AE,2C,2O,2P,2E,3C,3O,3P,3E,4C,4O,4P,4E,5C,5O,5P,5E,6C,6O,6P,6E,7C,7O,7P,7E,8C,8O,8P,8E,9C,9O,9P,9E,10C,10O,10P,10E,JC,JO,JP,JE,QC,QO,QP,QE,KC,KO,KP,KE
+alias shuffle {
+  var %c = $cards,%y,%r
+  while (%c) {
+    %y = $rand(1,$numtok(%c,44))
+    %r = $addtok(%r,$gettok(%c,%y,44),44)
+    %c = $deltok(%c,%y,44)
+  }
+  return %r
+}
+alias -l hold {
+  if ($2 != $null) hadd -m hold.em $1-
+  else return $hget(hold.em,$1)
+}
+alias -l holduser {
+  return $hold(player. $+ $nick)
+}
+
+
+alias com_chan_!holdem {
+  reforma sega
+  if (!$hold(status)) { noticen Já existe um jogo em andamento | halt }
+
+  hold status 1
+  hold cards $shuffle
+  hold members 
+  hold pot 0
+
+}
+
+alias com_chan_'entrar {
+  reforma sega
+  if ($hold(status) = 1) {
+    if ($hold(player. $+ $nick)) {
+
+    }
+  }
+}

@@ -1,0 +1,74 @@
+;; ----------------------------------------------------------------------------
+;; Comando :: chat :: @comer
+;; Come algo para recuperar o vigor
+;; ----------------------------------------------------------------------------
+alias com_chat_@comer {
+  var %item = $strip($1-)
+  if (!%item) {
+    msgtopo
+    msgt 0Você não selecionou 4nenhum 0item para comer!
+    msgt | msgt Para verificar as 0guloseimas 15disponíveis, digite 
+    msgt 7!9Lanchonete
+    msgbase
+  }
+  elseif ($dados($nick,stamina) == 100) {
+    msgtopo
+    msgt 0,1Seu Vigor Físico já está 12Excelente0.
+    msgbase
+  }
+  elseif ($dados($nick,stamina) <= 0) {
+    msgtopo
+    msgt 0,1Seu Vigor Físico é 4crítico0.
+    msgt 15,1Você precisa se curar antes.
+    msgt 0,1Digite: 7!9Hospital Graad
+    msgbase
+  }
+  else {
+    if (%item = Maçã || %item = maca || %item = maçã) {
+      if ($dados($nick,Dinheiro) < 500) {
+        msge 0,1Você não possui dinheiro suficiente.
+        return
+      }
+      msgtopo
+      msgt 4     5;'                                       
+      msgt 4 .´'';''0/\    0Você comprou e comeu uma 4maçã
+      msgt 4;       0\_;     0e recuperou 25% do seu        
+      msgt 4`.       .´            0Vigor Físico!          
+      msgt 4  `. . .´                                     
+      msgt 4    '5'4'                                       
+      msgbase
+      user.stamina.add 25
+      user.dinheiro.retrieve 500
+    }
+    if (%item = Chocolate) {
+      if ($dados($nick,Dinheiro) < 1000) {
+        msge 0,1Você não possui dinheiro suficiente.
+        return
+      }
+      msgtopo
+      msgt 5 _ _                                         
+      msgt 5|_|_|_    0Você comprou e comeu um 5Chocolate  
+      msgt 5|_|_|_|        0e recuperou 50% do seu        
+      msgt 5|_|_|_|             0Vigor Físico!            
+      msgt 5|_|_|_|                                       
+      msgbase
+      user.stamina.add 50
+      user.dinheiro.retrieve 1000
+    }
+    if (%item = Sushi) {
+      if ($dados($nick,Dinheiro) < 2000) {
+        msge 0,1Você não possui dinheiro suficiente.
+        return
+      }
+      msgtopo
+      msgt 0   \/     0Você comprou e comeu um Sushi  
+      msgt 0   /\        0e recuperou 100% do seu      
+      msgt 0  /  \            0Vigor Físico!          
+      msgt 0 /3____0\                                  
+      msgt 0/3|____|0\                                 
+      msgbase
+      user.stamina.add 100
+      user.dinheiro.retrieve 2000
+    }
+  }
+}

@@ -1,0 +1,297 @@
+alias dados { 
+  if !$2 { return users/ $+ $1 $+ .ini } 
+  if !$3 { return $readini(users/ $+ $1 $+ .ini,$1,$2) }
+  return $readini(users/ $+ $1 $+ .ini,$2,$3)
+}
+
+alias oper {
+  if (!$1) return $dados($nick,oper,lvl)
+  if (!$2) return $dados($nick,oper,$1)
+  return $dados($1,oper,$2)
+}
+
+;; ---------------------------------------------------------------------------------------- CLASS USER
+
+alias user.nick return $dados($iif($1,$1,$nick),nick)
+alias user.exists return $iif($dados($iif($1,$1,$nick),nick),$true,$false)
+alias user.senha return $dados($iif($1,$1,$nick),$iif($1,$1,$nick),senha)
+alias user.set w* $nick $1-
+alias user.get return $dados($nick,$iif($3,$2,$1),$iif($3,$3,$2))
+alias user.isadm return $iif($oper($iif($1,$1,$nick),lvl) > 3,$true,$false)
+alias user.isop return $iif($oper($iif($1,$1,$nick),lvl) > 2,$true,$false)
+alias user.isatu return $iif($oper($iif($1,$1,$nick),lvl) > 1,$true,$false)
+alias user.identifyed return $iif($dados($iif($1,$1,$nick),ident) == Sim,$true,$false)
+alias user.login {
+  var %nick = $iif($nick,$nick,$1)
+  var %user = $iif($1,$1,%nick)
+
+  w+ %nick ident Sim
+  w+ %nick ua $ctime
+  if ($chat(%nick)) w+ %nick ipident $chat(%nick).ip 
+
+  var %lv = $oper(%user, lvl)
+  if (%lv) .auser $oper(%user,lvl) %nick %user
+}
+alias user.logout {
+  var %n = $iif($1,$1,$nick)
+  if ($user.exists(%n)) w+ %n ident Nao
+  .ruser %n
+}
+
+alias user.lutando {
+  if (!$hget(atualiza)) return $false
+  if ($istok($hget(atualiza,p1),$nick,44)) return $true
+  if ($istok($hget(atualiza,p2),$nick,44)) return $true
+  return $false
+}
+
+;; itens
+alias user.item.consume w+ $1 itens $remtok($dados($1,itens),$2-,1,44)
+alias user.item.add {
+  if ($left($2,2) == FC) var %i = $2
+  else var %i = $loja($2-,nome)
+  if (%i) && ($dados($1,nick)) w+ $1 itens $dados($1,itens) $+ , $+ %i
+}
+alias user.item.has return $iif($istok($dados($1,itens),$2-,44),1,0)
+alias user.itens {
+  var %nick = $iif($1,$1,$nick)
+  var %itens = $sorttok($lower($replace($dados(%nick,itens),$+($chr(44),$chr(32)),$chr(44))),44,a)
+  var %it,%q,%final
+  var %x = 1,%i
+  while (%itens) {
+    %it = $gettok(%itens,1,44)
+    %q = $matchtok(%itens,%it,0,44)
+    %i = $iif($loja(%it,nome),$loja(%it,nome),%it)
+    %final = $addtok(%final,%i $+ $iif(%q > 1,$+([,%q,x])),44)
+    %itens = $remtok(%itens,%it,0,44)
+    if (%x > 15) unset %itens
+  }
+  return %final
+}
+
+;; méritos
+alias user.meritos return $dados($iif($1,$1,$nick),meritos)
+alias user.meritos.set w+ $iif($2 != $null,$1,$nick) meritos $iif($2 != $null,$2,$1)
+alias user.meritos.get return $user.meritos($iif($1,$1,$nick))
+alias user.meritos.add user.meritos.set $iif($2 != $null,$1,$nick) $calc($user.meritos.get($iif($2 != $null,$1,$nick)) + $iif($2 != $null,$2,$1))
+alias user.meritos.retrieve user.meritos.set $iif($2 != $null,$1,$nick) $calc($user.meritos.get($iif($2 != $null,$1,$nick)) - $iif($2 != $null,$2,$1))
+
+;; dinheiro
+alias user.dinheiro return $dados($iif($1,$1,$nick),dinheiro)
+alias user.dinheiro.get return $dados($iif($1,$1,$nick),dinheiro)
+alias user.dinheiro.set w+ $iif($2 != $null,$1,$nick) dinheiro $iif($2 != $null,$2,$1)
+alias user.dinheiro.add user.dinheiro.set $iif($2 != $null,$1,$nick) $calc($user.dinheiro.get($iif($2 != $null,$1,$nick)) + $iif($2 != $null,$2,$1))
+alias user.dinheiro.retrieve user.dinheiro.set $iif($2 != $null,$1,$nick) $calc($user.dinheiro.get($iif($2 != $null,$1,$nick)) - $iif($2 != $null,$2,$1))
+
+;; cosmo
+alias user.cosmo return $dados($iif($1,$1,$nick),cosmo)
+alias user.cosmo.set w+ $iif($2 != $null,$1,$nick) cosmo $iif($2 != $null,$2,$1)
+alias user.cosmo.add user.cosmo.set $iif($2 != $null,$1,$nick) $calc($user.cosmo($iif($2 != $null,$1,$nick)) + $iif($2 != $null,$2,$1))
+alias user.cosmo.retrieve user.cosmo.set $iif($2 != $null,$1,$nick) $calc($user.cosmo($iif($2 != $null,$1,$nick)) - $iif($2 != $null,$2,$1))
+alias user.cosmo.real {
+  var %cosmo = $user.cosmo($1)
+  var %vigor = $user.vigor($1)
+  if (%vigor isnum 0-80) var %pct = $calc((%vigor ^ 2) * (%cosmo / 100 ^ 2))
+  else {
+    var %v = $calc((%vigor - 80) * 5)
+    var %pct = $calc($log($calc(%v + 20)) * (%cosmo / $log(120)))
+  }
+  return $int(%pct)
+}
+
+
+;; aura
+alias user.aura return $aura($iif($1,$1,$nick)).x
+alias user.aura.abs  return $aura($iif($1,$1,$nick))
+
+;; stamina
+alias user.stamina return $dados($iif($1,$1,$nick),stamina)
+alias user.stamina.set w+ $iif($2 != $null,$1,$nick) stamina $iif($2 != $null,$2,$1)
+alias user.stamina.add user.stamina.set $iif($2 != $null,$1,$nick) $iif($calc($dados($iif($2 != $null,$1,$nick),stamina) + $iif($2 != $null,$2,$1)) < 100,$v1,100)
+alias user.stamina.retrieve user.stamina.set $iif($2 != $null,$1,$nick) $iif($calc($dados($iif($2 != $null,$1,$nick),stamina) - $iif($2 != $null,$2,$1)) > 0,$v1,0)
+
+;; vigor (alias stamina)
+alias user.vigor return $user.stamina($1)
+alias user.vigor.set user.stamina.set $1-
+alias user.vigor.add user.stamina.set $iif($2 != $null,$1,$nick) $iif($calc($dados($iif($2 != $null,$1,$nick),stamina) + $iif($2 != $null,$2,$1)) < 100,$v1,100)
+alias user.vigor.retrieve user.stamina.set $iif($2 != $null,$1,$nick) $iif($calc($dados($iif($2 != $null,$1,$nick),stamina) - $iif($2 != $null,$2,$1)) > 0,$v1,0)
+
+;; treinos
+alias user.treino.normal return $dados($iif($1,$1,$nick),treino)
+alias user.treino.normal.set w* $iif($2 != $null,$1,$nick) $iif($2 != $null,$1,$nick) treino $iif($2 != $null,$2,$1)
+alias user.treino.tce return $dados($iif($1,$1,$nick),tce)
+alias user.treino.tce.set w* $iif($2 != $null,$1,$nick) $iif($2 != $null,$1,$nick) tce $iif($2 != $null,$2,$1)
+alias user.treino.mestre return $dados($iif($1,$1,$nick),tcm,ultimotreino)
+alias user.treino.mestre.set w* $iif($2 != $null,$1,$nick) tcm ultimotreino $iif($2 != $null,$2,$1)
+
+alias user.treino.asgard return $dados($iif($1,$1,$nick),asgard,treino)
+alias user.treino.asgard.set w* $iif($2 != $null,$1,$nick) asgard treino $iif($2 != $null,$2,$1)
+alias user.treino.asgard.mestre return $dados($iif($1,$1,$nick),asgard,mestreatual)
+alias user.treino.asgard.mestre.set w* $iif($2,$1,$nick) asgard mestreatual $iif($2,$2,$1)
+alias user.treino.asgard.mestre.treinos return $dados($iif($1,$1,$nick),asgard,$user.treino.asgard.mestre($iif($1,$1,$nick)))
+alias user.treino.asgard.mestre.treinos.set w* $iif($2,$1,$nick) asgard $user.treino.asgard.mestre($iif($2,$1,$nick)) $iif($2,$2,$1)
+
+alias user.treino.santuario return $dados($iif($1,$1,$nick),tcm,ultimotreino)
+alias user.treino.santuario.set w* $iif($2 != $null,$1,$nick) tcm ultimotreino $iif($2 != $null,$2,$1)
+alias user.treino.santuario.mestre return $dados($iif($1,$1,$nick),tcm,mestreatual)
+alias user.treino.santuario.mestre.set w* $iif($2,$1,$nick) tcm mestreatual $iif($2,$2,$1)
+alias user.treino.santuario.mestre.treinos return $dados($iif($1,$1,$nick),tcm,$user.treino.santuario.mestre($iif($1,$1,$nick)))
+alias user.treino.santuario.mestre.treinos.set w* $iif($2,$1,$nick) tcm $user.treino.santuario.mestre($iif($2,$1,$nick)) $iif($2,$2,$1)
+
+alias user.treino.marinas return $dados($iif($1,$1,$nick),marinas,treino)
+alias user.treino.marinas.set w* $iif($2 != $null,$1,$nick) marinas treino $iif($2 != $null,$2,$1)
+alias user.treino.marinas.mestre return $dados($iif($1,$1,$nick),marinas,mestreatual)
+alias user.treino.marinas.mestre.set w* $iif($2,$1,$nick) marinas mestreatual $iif($2,$2,$1)
+alias user.treino.marinas.mestre.treinos return $dados($iif($1,$1,$nick),marinas,$user.treino.marinas.mestre($iif($1,$1,$nick)))
+alias user.treino.marinas.mestre.treinos.set w* $iif($2,$1,$nick) marinas $user.treino.marinas.mestre($iif($2,$1,$nick)) $iif($2,$2,$1)
+
+alias user.treino.active {
+  if ($timer(.treino. $+ $nick $+ .tce)) return equipamento
+  if ($timer(.treino. $+ $nick $+ .normal)) return normal
+  if ($timer(.treino. $+ $nick $+ .santuario)) return santuario
+  if ($timer(.treino. $+ $nick $+ .asgard)) return asgard
+  if ($timer(.treino. $+ $nick $+ .marinas)) return marinas
+}
+
+;; perfil
+alias user.perfil.sexo return $iif($dados($iif($1,$1,$nick),sexo),$v1)
+alias user.perfil.sexo.set w+ $iif($2,$1,$nick) sexo $iif($2,$2,$1)
+alias user.perfil.twitter return $iif($dados($iif($1,$1,$nick),user,twitter),$v1)
+alias user.perfil.nascimento return $iif($dados($iif($1,$1,$nick),user,nascimento),$v1)
+alias user.perfil.nascimento.set w* $iif($2,$1,$nick) user nascimento $iif($2,$2,$1)
+alias user.perfil.nascimento.dia return $gettok($dados($iif($1,$1,$nick),user,nascimento),1,47)
+alias user.perfil.nascimento.mes return $gettok($dados($iif($1,$1,$nick),user,nascimento),2,47)
+alias user.perfil.nascimento.ano return $gettok($dados($iif($1,$1,$nick),user,nascimento),3,47)
+alias user.perfil.idade return $iif($user.perfil.nascimento($iif($1,$1,$nick)),$floor($calc(($ctime - $ctime($user.perfil.nascimento($iif($1,$1,$nick)))) / 31536000)),-)
+alias user.perfil.email return $dados($iif($1,$1,$nick),user,email)
+alias user.perfil.email.set w* $iif($2,$1,$nick) user email $iif($2,$2,$1)
+alias user.perfil.email.code return $dados($iif($1,$1,$nick),user,emailcode)
+alias user.perfil.email.code.set w* $iif($2,$1,$nick) user emailcode $iif($2,$2,$1)
+
+;; armadura
+alias user.armadura return $dados($iif($1,$1,$nick),armadura)
+alias user.armadura.on return $iif($dados($iif($1,$1,$nick),arm.on) == sim,1,0)
+alias user.armadura.life return $dados($iif($1,$1,$nick),hp.arm)
+alias user.armadura.life.total return $dados($iif($1,$1,$nick),hp.rec)
+alias user.armadura.life.restore w+ $iif($1,$1,$nick) hp.arm $user.armadura.life.total($iif($1,$1,$nick))
+alias user.armadura.sexo return $arms.sexo($user.armadura($iif($1,$1,$nick)))
+alias user.armadura.categoria return $arms.categoria($user.armadura($iif($1,$1,$nick)))
+alias user.armadura.classe return $arms.classe($user.armadura($iif($1,$1,$nick)))
+alias user.armadura.mundo return $arms.mundo($user.armadura($iif($1,$1,$nick)))
+alias user.armadura.golpes return $arms.golpes($user.armadura($iif($1,$1,$nick)))
+alias user.armadura.golpes.permitidos {
+  var %golpes = $arms.golpes($user.armadura($iif($1,$1,$nick))),%x = 1,%g
+  while (%x <= $numtok(%golpes,44)) {
+    %g = $gettok(%golpes,%x,44)
+    if ($lefter($golpe(%g).aura,3) > $lefter($aura($iif($1,$1,$nick)).x,3)) { %golpes = $deltok(%golpes,%x,44) | dec %x }
+    inc %x
+  }
+  return %golpes
+}
+alias user.armadura.remove {
+  var %n = $iif($1,$1,$nick), %arm = $user.armadura(%n)
+  if (!%arm || %arm == Nenhuma) return
+  w+ %n armadura Nenhuma
+  w- %n hp.arm
+  w- %n hp.rec
+  w+ %n arm.on Nao
+  writeini $arms.path $arms.prepare(%arm) Nick Nenhum
+  writeini $arms.path $arms.prepare(%arm) liberada Sim
+}
+alias user.armadura.give {
+  var %n = $iif($2,$1,$nick), %arm = $iif($2,$2,$1)
+  if (!$user.exists(%n) || !$arms.exists(%arm)) { return }
+  var %hp = $replace($arms.classe(%arm),S,5000,A,1000,B,800,C,400,D,100)
+  w+ %n Hp.Arm %hp
+  w+ %n Hp.Rec %hp
+  w+ %n Arm.on Nao
+  w+ %n Armadura $arms.nome(%arm)
+  writeini $arms.path $arms.prepare(%arm) nick %n
+}
+
+;; historico
+alias user.historico.vitorias return $dados($iif($1,$1,$nick),historico,vitorias)
+alias user.historico.derrotas return $dados($iif($1,$1,$nick),historico,derrotas)
+alias user.historico.empates return $dados($iif($1,$1,$nick),historico,empates)
+alias user.historico.narradas return $dados($iif($1,$1,$nick),historico,narradas)
+alias user.historico.narracoes return $dados($iif($1,$1,$nick),historico,narradas)
+alias user.historico.combates return $calc($user.historico.vitorias($1) + $user.historico.derrotas($1) + $user.historico.empates($1))
+alias user.historico.vitorias.inc w* $iif($1,$1,$nick) historico vitorias $calc($user.historico.vitorias($iif($1,$1,$nick)) + 1)
+alias user.historico.derrotas.inc w* $iif($1,$1,$nick) historico derrotas $calc($user.historico.derrotas($iif($1,$1,$nick)) + 1)
+alias user.historico.empates.inc w* $iif($1,$1,$nick) historico empates $calc($user.historico.empates($iif($1,$1,$nick)) + 1)
+alias user.historico.narradas.inc w* $iif($1,$1,$nick) historico narradas $calc($user.historico.narradas($iif($1,$1,$nick)) + 1)
+alias user.historico.narracoes.inc w* $iif($1,$1,$nick) historico narradas $calc($user.historico.narradas($iif($1,$1,$nick)) + 1)
+alias user.historico.vitorias.dec w* $iif($1,$1,$nick) historico vitorias $calc($user.historico.vitorias($iif($1,$1,$nick)) - 1)
+alias user.historico.derrotas.dec w* $iif($1,$1,$nick) historico derrotas $calc($user.historico.derrotas($iif($1,$1,$nick)) - 1)
+alias user.historico.empates.dec w* $iif($1,$1,$nick) historico empates $calc($user.historico.empates($iif($1,$1,$nick)) - 1)
+alias user.historico.narradas.dec w* $iif($1,$1,$nick) historico narradas $calc($user.historico.narradas($iif($1,$1,$nick)) - 1)
+alias user.historico.narracoes.dec w* $iif($1,$1,$nick) historico narradas $calc($user.historico.narradas($iif($1,$1,$nick)) - 1)
+
+;; quiz
+alias user.quiz.acertos return $dados($iif($1,$1,$nick),quiz,acertos)
+alias user.quiz.erros return $dados($iif($1,$1,$nick),quiz,erros)
+alias user.quiz.perguntas return $dados($iif($1,$1,$nick),quiz,perguntas)
+alias user.quiz.data return $dados($iif($1,$1,$nick),quiz,data)
+
+;; log de lutas
+alias user.lutas.add w+ $iif($2,$1,$nick) lutas $gettok($instok($user.lutas($iif($2,$1,$nick)),$ctime $iif($2,$2,$1),1,44),1-10,44)
+alias user.lutas return $dados($iif($1,$1,$nick),lutas)
+alias user.lutas.limit {
+  var %l = $user.lutas($iif($1,$1,$nick)), %limit = $ctime - 1209600, %lutas = 0
+  while (%l) {
+    if ($gettok($gettok(%l,1,44),1,32) > %limit) inc %lutas
+    %l = $deltok(%l,1,44)
+  }
+  return %lutas
+}
+
+;; armaduras
+alias arms.prepare return $capitalize($remove($1-,$chr(32)))
+alias arms.path return armaduras.ini
+alias arms.exists return $iif($arms.nome($1),$true,$false)
+alias arms.dono return $readini(armaduras.ini,$arms.prepare($1),nick)
+alias arms.nome return $readini(armaduras.ini,$arms.prepare($1),arm)
+alias arms.sexo return $readini(armaduras.ini,$arms.prepare($1),traje)
+alias arms.liberada return $readini(armaduras.ini,$arms.prepare($1),liberada)
+alias arms.categoria return $readini(armaduras.ini,$arms.prepare($1),categoria)
+alias arms.classe return $readini(armaduras.ini,$arms.prepare($1),classe)
+alias arms.mundo return $readini(armaduras.ini,$arms.prepare($1),mundo)
+alias arms.extra return $readini(armaduras.ini,$arms.prepare($1),extra)
+alias arms.golpes {
+  var %i = 1,%g
+  while ($read($golpes.path,w,$capitalize($1) $+ @*,%i)) {
+    %g = $addtok(%g,$gettok($v1,2,64),44)
+    %i = $readn + 1
+  }
+  return %g
+}
+
+;; golpes
+alias golpe {
+  var %g = $read($golpes.path,w,$iif($2,$capitalize($2),*) $+ @ $+ $1 $+ @*)
+  if ($prop == aura) return $gettok(%g,3,64)
+  if ($prop == classe) return $arms.categoria($gettok(%g,1,64))
+  if ($prop == armadura) return $gettok(%g,1,64)
+  if ($istok(descrição descricao desc,$prop,32)) return $gettok(%g,4,64)
+  return $gettok(%g,2,64)
+}
+
+;; itens
+alias itens.path return sys\loja.ini
+alias item {
+  if ($prop = categoria) return $readini($itens.path,$1-,categoria)
+  if ($prop = forma) return $readini($itens.path,$1-,forma)
+  if ($prop = aura) return $readini($itens.path,$1-,necessario)
+  if ($prop = desc) return $readini($itens.path,$1-,descrição)
+  if ($prop = callback) return $readini($itens.path,$1-,callback)
+  if ($prop = consumivel) return $readini($itens.path,$1-,consumivel)
+  return $readini($itens.path,$1-,nome)
+}
+
+;; prisão
+alias user.prisao return $iif($dados($iif($1,$1,$nick),prisao,soltura),1,0)
+alias user.prisao.por return $dados($iif($1,$1,$nick),prisao,por)
+alias user.prisao.motivo return $dados($iif($1,$1,$nick),prisao,motivo)
+alias user.prisao.ate return $dados($iif($1,$1,$nick),prisao,soltura)
+
+alias aura.quantize return $iif($remove($1,x) isnum,$v1,$replacex($1,Máxima,101,Extrema,105,Suprema,108,Divina,111))

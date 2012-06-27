@@ -1,0 +1,36 @@
+alias com_all_!status {
+  id.check
+  if ($1 == $null) { .notice $nick $c1 09 $+ $nick $+ 15, digite uma armadura válida. $c2 | Halt }
+  var %arm = $capitalize($remove($1-,$chr(32)))
+  if ($arms.dono(%arm)) msgn 0Status15: Armadura:0  $+ $arms.nome(%arm) $+  14/15 Categoria:9  $+ $arms.categoria(%arm) $+  14/15 Liberada:  $+ $replace($arms.liberada(%arm),sim,9Sim,nao,4Não) $+  14/15 Dono:0  $+ $arms.dono(%arm) $+  
+  else .noticen 09 $+ $nick $+ 15, essa armadura é inválida.
+}
+
+off *:text:*:*:{
+  if (!Bloquear == $strip($1)) {  
+    id.check | op.check !
+    var %arm = $remove($strip($2-),$chr(32))
+    if ($2 == $null) { .notice $nick $c1 09 $+ $nick $+ 15, digite uma armadura válida. $c2 | Halt }
+    if ($arms.dono(%arm)) {
+      if ($arms.liberada(%arm) = Nao) .notice $nick $c1 A armadura de0  $+ $arms.nome(%arm) $+  15já esta Bloqueada. $c2
+      else {
+        writeini armaduras.ini %arm liberada Nao
+        .msg $iif($chan,$chan,$nick) $c1 A armadura de0  $+ $arms.nome(%arm) $+  15foi Bloqueada. $c2
+      }
+    }
+    else { .notice $nick $c1 Armadura 14"09 $+ $2- $+ 15" inválida. $c2 }
+  }
+  if (!liberar = $strip($1)) {
+    id.check | op.check !
+    var %arm = $remove($strip($2-),$chr(32))
+    if ($2 == $null) { .notice $nick $c1 09 $+ $nick $+ 15, digite uma armadura válida. $c2 | Halt }
+    if ($arms.dono(%arm)) {
+      if ($arms.liberada(%arm) = sim) .notice $nick $c1 A armadura de0  $+ $arms.nome(%arm) $+  15já esta Liberada. $c2
+      else {
+        writeini armaduras.ini %arm liberada Sim
+        .msg $iif($chan,$chan,$nick) $c1 A armadura de0  $+ $arms.nome(%arm) $+  15foi Liberada. $c2
+      }
+    }
+    else { .notice $nick $c1 Armadura 14"09 $+ $2- $+ 15" inválida. $c2 }
+  }
+}

@@ -1,0 +1,117 @@
+on *:chat:*: {
+  if ($strip($1) = !Armaduras) {
+    id.check =
+    msgtopo 
+    msgt 15Seja Bem-Vindo14(9a14,1)15 à parte de 9Armaduras15 do SaintSeiya,
+    msgt 15Bot de lutas narradas do Canal 9#15Cdz0Fore15ver
+    msgdiv
+    msgt 15,1As Armaduras são divididas de acordo com os mundos14,
+    msgt 15,1que são:
+    msgt
+    msgl            9Sekai14:15 Mundo dos Homens.
+    msgl              9Kaikai14:15 Mundo das Águas.
+    msgl                9Meikai14:15 Mundo dos Mortos.
+    msgl                  9Makai14:15 Mundo dos Demônios.
+    msgl                    9Tenkai14:15 Mundo dos Céus.
+    msgdiv
+    msgl 9 .15Digite 9@0Sekai15 para ver as 9Armaduras15 do Sekai.
+    msgl 9 .15Digite 9@0Kaikai15 para ver as 9Armaduras15 do Kaikai.
+    msgl 9 .15Digite 9@0Meikai15 para ver as 9Armaduras15 do Meikai.
+    msgl 9 .15Digite 9@0Makai15 para ver as 9Armaduras15 do Makai.
+    msgl 9 .15Digite 9@0Tenkai15 para ver as 9Armaduras15 do Tenkai.
+    msgdiv
+    msgt 15Para ver as Armaduras Supremas, digite: 9@0Olimpo
+    msgdiv
+    msgt 15Para ver as classes das armaduras e a Aura necessária
+    msgt 15para acessar cada classe, digite: 9@0Classes Armaduras 
+    msgl
+    msgt 15Para ver as 9armaduras livres15, digite 9!0Livres <classe>
+    msgbase
+  }
+
+  if ($istok(@Meikai @sekai @tenkai @makai @olimpo @kaikai,$strip($1-),32)) { 
+    tokenize 32 $strip($1-)
+    id.check =
+    msgtopo 
+    msgt 0Bem-Vindo14(9a14,1)15 a parte das 9Armaduras do  $+ $replace($1,@Meikai,Meikai,@sekai,Sekai,@kaikai,Kaikai,@makai,Makai,@tenkai,Tenkai,@olimpo,Olimpo) $+ 
+    msgdiv
+    if $1 = @meikai { msgt 0Negras 9|0 Fantasmas II 9|0 Sapuris }
+    if $1 = @sekai { msgt 0Aço 9|0 Bronze 9|0 Prata 9|0 Guerreiros Deuses I 9|0 Ouro }
+    if $1 = @kaikai { msgt 0Fantasmas I 9|0 Guerreiros Deuses II 9|0 Marinas }
+    if $1 = @makai { msgt 0Gigas 9|0 Anjos da Morte 9|0 Titãs }
+    if $1 = @tenkai { msgt 0Berserkers 9|0 Coroa do Sol 9|0 Anjos Celestes }
+    if $1 = @olimpo { msgt 0Kamuis }
+    msgdiv 
+    msgt 15Para ver a lista de Armaduras Masculinas de uma dessas
+    msgt 15categorias, digite14: 9!0Masculino 11<categoria>
+    msgt 15Exemplo14:9 !0Masculino11 $replace($1,@sekai,Bronze,@kaikai,Fantasmas I,@meikai,Negras,@makai,Gigas,@tenkai,Berserkers,@olimpo,Kamuis)
+    msgdiv
+    msgt 15Para ver a lista de Armaduras Femininas de uma dessas
+    msgt 15categorias, digite14: 9!0Feminino 11<categoria>
+    msgt 15Exemplo14:9 !0Feminino11 $replace($1,@sekai,Bronze,@kaikai,Fantasmas I,@meikai,Negras,@makai,Gigas,@tenkai,Berserkers,@olimpo,Kamuis)
+    msgbase
+  }
+  if ($strip($1) = !masculino) || ($strip($1) = !feminino) { 
+    id.check =
+    tokenize 32 $strip($1-)
+    var %tipo = $wildtok($arms(infos,categorias),$2- $+ #*,1,44)
+    var %sexo = $remove($1,!)
+    var %tipo = $2
+    if (%tipo || 1) {
+      var %mundo = $gettok(%tipo,2,35),%tipo = $gettok(%tipo,1,35)
+      msgtopo 
+      msgt 15Esta é a seção das Armaduras de0 %tipo $replace(%sexo,masculino,11Masculinas,feminino,13Femininas) $+ 15.
+      msgt 15Armaduras pertencentes ao11 %mundo $+ 15.
+      msgdiv
+      var %x = $ini($arms,0),%y = 0,%arm,%arml,%z = 0
+      while %y <= %x { 
+        %arm = $ini($arms,%y)
+        if ($arms(%arm,categoria) = %tipo) && ($arms(%arm,traje) = %sexo) {
+          %arml = %arm
+          msgl 
+          msgl $replace(%sexo,masculino,11,feminino,13) $+ Armadura14:0  $+ $arms(%arm,arm) $+  14/ 8Dono14:9 $arms(%arm,nick)
+          msgl 8Liberada14:0 $arms(%arm,liberada) $replace(%sexo,masculino,11*,feminino,13*) 8Classe14:0 $arms(%arm,classe)
+          inc %z
+        }
+        inc %y
+      }
+      if (!%z) msgt 0Nenhuma Armadura Encontrada
+      else { msgl | msgt Total de08 %z 15armaduras encontradas 14(00 $+ %z $+ 14/15 $+ $calc(%x - 1) $+ 14) }
+      msgdiv
+      msgt 15Fim da lista das Armaduras de0 %tipo $replace(%sexo,masculino,11Masculinas,feminino,13Femininas) $+ 15.
+      msgt 15Para ver mais informações sobre uma armadura,
+      msgt 15digite 9!0Info7 <Armadura>
+      msgt 15Exemplo: 9!0Info7 %arml
+      msgt 15Para ver a Aura necessária para essa Classe,
+      msgt 15digite: 9@0Classes Armaduras15 e saiba se você possui
+      msgt 15nível para pegar uma armadura dessa seção. 
+      msgbase
+    }
+  }
+  if ($strip($1-) = @Classes Armaduras) { 
+    id.check = 
+    msgtopo
+    msgt Você entrou na seção de 0Classes das Armaduras
+    msgt As armaduras são divididas em classes:
+    msgdiv
+    msgt Classe S 14/9 Classe A 14/9 Classe B 14/9 Classe C 14/9 Classe D
+    msgdiv
+    msgt Cada Armadura possui uma classe diferente e cada classe
+    msgt precisa de uma certa aura para ser liberada, ou seja,
+    msgt você precisá alcançar uma certa aura necessária, para
+    msgt liberar seu acesso às armaduras de uma certa classe.
+    msgt
+    msgt A seguir, a lista das Classes e a aura necessária para
+    msgt a liberação da mesma:
+    msgdiv
+    msgt Classe S 14-0 Aura11 Divina0
+    msgt  Classe A 14-0 Aura11 54x0.
+    msgt  Classe B 14-0 Aura11 37x0.
+    msgt  Classe C 14-0 Aura11 15x0.
+    msgt  Classe D 14-0 Aura11 2x0.
+    msgdiv
+    msgt Para ver as Classes de uma Armadura, digite 
+    msgt 7!9Armaduras 15e siga as instruções.
+    msgbase
+  }
+}

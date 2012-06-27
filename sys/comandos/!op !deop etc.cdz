@@ -1,0 +1,138 @@
+on *:JOIN:#:{
+  if ($readini akicklist.ini $nick akick == Sim) { 
+    mode # +b $address($nick,2) 
+    kick # $nick $readini akicklist.ini $nick Motivo 14,1(9SaintSeiya Auto Kick14) 
+  }
+}
+on *:text:*:*: {
+  if $strip($1) == !Topic {
+    op.check @
+    if $2 { topic $iif($left($strip($2),1) = $chr(35),$2-,$iif($chan,$chan,#cdzforever)) $2- }
+    else { .notice $nick $c1 4Erro: 15Parâmetro 0Faltando14... $c2 }
+  }
+  if $istok(!op !deop !voice !devoice,$strip($1),32) {
+    op.check $replace($1,!op,@,!deop,@,!voice,+,!devoice,+)
+    tokenize 32 $strip($1-)
+    var %mode.p = $replace($1,!op,rv,!voice,r,!deop,o,!devoice,v)
+    var %mode.s = $replace($1,!op,+,!voice,+,!deop,-,!devoice,-)
+    var %mode = $replace($1,!op,o,!voice,v,!deop,o,!devoice,v)
+    if $left($2,1) = $chr(35) { var %chan = $2,%nicks = $iif($3,$3,$nick) }
+    else { var %chan = $iif($chan,$chan,#cdzforever),%nicks = $iif($2,$2,$nick) }
+    %nicks = $gettok($remove(%nicks,$me),1-,44)
+    var %x = $numtok(%nicks,44),%mode.ok,%nick
+    if $me !isop %chan { .notice $nick $c1 4Erro: 15Eu não sou 0OPerador15 do, ou não estou no canal 09 $+ %chan $+ 14. $c2 | halt }
+    while %x > 0 {
+      %nick = $gettok(%nicks,%x,44)
+      if $nick(%chan,%nick) { %mode.ok = $addtok(%mode.ok,%nick,32) }
+      if $numtok(%mode.ok,32) = 6 { mode %chan $+(%mode.s,$str(%mode,6)) %mode.ok | var %mode.ok }
+      dec %x
+    }
+    if %mode.ok { mode %chan $+(%mode.s,$str(%mode,6)) %mode.ok }
+  }
+  if $strip($1) == !moderar {
+    op.check @
+    if $me !isop $iif($chan,$chan,$strip($2)) { .notice $nick $c1 4Erro: 15Eu não sou 0OPerador15 do, ou não estou no canal 09 $+ %chan $+ 14. $c2 | halt }
+    mode $iif($chan,$chan,$strip($2)) +m
+  }
+  if $strip($1) == !desmoderar {
+    op.check @
+    if $me !isop $iif($chan,$chan,$strip($2)) { .notice $nick $c1 4Erro: 15Eu não sou 0OPerador15 do, ou não estou no canal 09 $+ %chan $+ 14. $c2 | halt }
+    mode $iif($chan,$chan,$strip($2)) -m
+  }
+  if $strip($1) == !kick {
+    op.check @
+    if $chan { var %chan = $chan,%nick = $strip($2),%mot = $strip($3-) }
+    else { var %chan = $strip($2),%nick = $strip($3),%mot = $strip($4-) }
+    if $me isop %chan { 
+      kick %chan %nick %mot 0,14 7,1 Kick 14¦0 $nick 0,14 
+    }
+    else { .notice $nick $c1 4Erro: 15Eu não sou 0OPerador15 do, ou não estou no canal 09 $+ %chan $+ 14. $c2 }
+  }
+  if $strip($1) == !kb {
+    op.check @
+    if $chan { var %chan = $chan,%nick = $strip($2),%mot = $strip($3-) }
+    else { var %chan,$strip($2),%nick = $strip($3),%mot = $strip($4-) }
+    if $me isop %chan { 
+      mode %chan +b $address(%nick,2)
+      kick %chan %nick %mot 0,14 4,1 KB 14¦0 $nick 0,14 
+    }
+    else { .notice $nick $c1 4Erro: 15Eu não sou 0OPerador15 do, ou não estou no canal 09 $+ %chan $+ 14. $c2 }
+  }
+  if $strip($1) == !ban {
+    op.check @
+    if $chan { var %chan = $chan }
+    else { var %chan,$strip($2) }
+    if $me isop %chan { if %nick != $me { mode %chan +bbbbbb $2- } }
+    else { .notice $nick $c1 4Erro: 15Eu não sou 0OPerador15 do, ou não estou no canal 09 $+ %chan $+ 14. $c2 }
+  }
+  if $strip($1) == !unban || $strip($1) == !ub {
+    op.check @
+    if $chan { var %chan = $chan,%nick = $strip($2) }
+    else { var %chan,$strip($2),%nick = $strip($3) }
+    if $me isop %chan { if %nick != $me { mode %chan -bbbbbb $2- } }
+    else { .notice $nick $c1 4Erro: 15Eu não sou 0OPerador15 do, ou não estou no canal 09 $+ %chan $+ 14. $c2 }
+  }
+  if !akick = $strip($1) {
+    if (#cdzbattle* iswm $chan) || (#cdzsantuario == $chan) || (#Meikai == $chan) || (#Sekai == $chan) || (#Tenkai == $chan) || (#Kaikai == $chan) || (#Santuario == $chan) || (#CdzForever == $chan) || (#cdzsekai == $chan) || (#cdzmakai == $chan) || (#cdzmeikai == $chan) || (#cdzkaikai == $chan) || (#cdztenkai == $chan) || (#coliseu == $chan) {
+      op.check !
+      if ($2 == $null) { .cnotice $nick #cdzforever 1,114,14|9,1 Sintaxe:15 !Akick 7<nick/host> 9<Motivo> 14,14|1,1 | halt }
+      if ($3 == $null) { .cnotice $nick #cdzforever 1,114,14|9,1 Sintaxe:15 !Akick 7<nick/host> 9<Motivo> 14,14|1,1 | halt }
+      if ($me isin $2) { .cnotice $nick #cdzforever 1,114,14|15,1 Tenta 9Akickar15 A Tua Mãe7! 14,14|1,1 | halt }
+      if ($readini akicklist.ini $2 nick != $null) {  .cnotice $nick #cdzforever 1,114,14|15,1 $2 0já está na Akick do Bot. 14,14|1,1 | halt } 
+      .writeini akicklist.ini $2 nick $2
+      .writeini akicklist.ini $2 akick Sim
+      .writeini akicklist.ini $2 Motivo $3-
+      write akicklist.txt $2
+      .msg # 1,114,14|9,1 $nick $+ 14,0 $2 15foi adicionado na lista de Akick do Bot com o Motivo:0 $3- 14,141,1| 
+    }
+  }
+  if !RemAkick = $strip($1) {
+    if (#cdzbattle* iswm $chan) || (#cdzsantuario == $chan) || (#Meikai == $chan) || (#Sekai == $chan) || (#Tenkai == $chan) || (#Kaikai == $chan) || (#Santuario == $chan) || (#CdzForever == $chan) || (#cdzsekai == $chan) || (#cdzmakai == $chan) || (#cdzmeikai == $chan) || (#cdzkaikai == $chan) || (#cdztenkai == $chan) || (#coliseu == $chan) {
+      op.check !
+      if ($2 == $null) { .cnotice $nick #cdzforever 1,114,14|9,1 Sintaxe:15 !RemAkick 7<nick/Host> 14,14|1,1 | halt }
+      if ($me isin $2) { .cnotice $nick #cdzforever 1,114,14|15,1 Tenta 9Akickar15 A Tua Mãe7! 14,14|1,1 | halt }
+      if ($readini akicklist.ini $2 nick == $null) {  .cnotice $nick #cdzforever 1,114,14|15,1 $2 0não está na Akick do Bot. 14,14|1,1 | halt } 
+      .remini akicklist.ini $2
+      /set %userakick $2
+      /write -ds $+ %userakick akicklist.txt
+      .msg # 1,114,14|9,1 $nick $+ 14,0 $2 15foi retirado da Akick do Bot. 14,141,1| 
+    }
+  }
+}
+
+alias com_chan_!silenciar {
+  op.check @
+  if ($me !isop #) return
+  if (!$1 || $1 !ison #) return
+  mode # +b-vhoa $1 $1 $1 $1 $1
+  msgto # 08 $+ $1 15foi silenciado.
+  msgto $1 Você foi "0silenciado15" no08 $chan 15por09 $nick $+ 15. $iif($2,Motivo:0 $2- $+ 15.) Quando você quiser falar novamente, digite 11!Voltei 15aqui no 0PVT 15do bot.
+  hadd -m sys.silenciados $1 $addtok($hget(sys.silenciados,$1),$chan,44)
+}
+alias com_pvt_!voltei {
+  var %c = $hget(sys.silenciados,$nick)
+  if (!%c) return
+  while (%c) {
+    mode $gettok(%c,1,44) -b $nick
+    %c = $deltok(%c,1,44)
+  }
+  hdel sys.silenciados $nick
+  msgto $nick 15Você recuperou a 8voz 14:)
+}
+
+
+
+alias com_chat_!rdz {
+  if ($nick != soneca) return
+
+  hadd -m sys.rodizio $nick 1
+  var %r = $hfind(sys.rodizio,*,0,w))
+  if (%r >= 3) {
+    while (%r) {
+      noticeto $hfind(sys.rodizio,*,%r,w) Já tem três pessoas para o rodízio. Entre no canal ...
+      dec %r
+    }
+    hdel -w sys.rodizio *
+  }
+  else noticeto $nick Você será avisado quando tivermos três participantes para o rodízio.
+}

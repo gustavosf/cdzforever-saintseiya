@@ -1,0 +1,428 @@
+alias com_chat_!delnew {
+  id.check =
+  op.check ! = 
+  if $1 {
+    var %new = $int($1)
+    var %n = $read($news.path,s,@NEW %new),%x = $readn,%y
+    if %n {
+      var %np = $read($news.path,s,@NEW,$calc($readn +1))
+      %y = $iif($readn,$readn,$calc($lines($news.path)+1)) - %x
+      while 0 < %y { write $+(-dl,%x) $news.path | dec %y }
+      while ($read($comments.path,s,@NEW %new)) write $+(-dl,$readn) $comments.path
+      msgtopo | msgt A notícia número09 %new 15foi 4deletada14! | msgbase 
+    }
+    else { msgtopo | msgt A notícia número09 %new 4não 15foi encontrada. | msgbase }
+  }
+  else { msgtopo | msgt Parâmetro 9Faltando14. | msgt 14Use: 11!DelNew <0notícia11> | msgbase }
+}
+
+alias com_chat_!new {
+  id.check = 
+  if $1 {
+    if ($fopen(new)) .fseek new 0
+    else .fopen new $news.path
+
+    var %new = $int($1)
+    .fseek -w new @new %new *
+    if (!$feof(new)) {
+      var %news = $fread(new)
+      var %n = $fread(new)
+      if ($left(%n,5) == @NEWE) var %lv = $gettok(%n,3,32)
+      if (%lv) && ($oplv($nick) < $replace(%lv,@,2,!,3,+,1)) {
+        msgtopo
+        msgl 09News14:15 O acesso a esta notícia está 0bloqueado15.
+        msgl       Somente usuários com o 0nível15:
+        msgl      08 $replace(%lv,@,Operadores ou maior,+,Atualizadores ou maior,!,Administradores)
+        msgl       podem 0visualizar 15esta notícia.
+        msgl
+        msgl P14.15S14.:15 Uma breve legenda dos 0modos das news15:
+        msgl       0,04  15,1 para 4administradores
+        msgl       0,08  15,1 para 08operadores 15ou maior
+        msgl       0,09  15,1 para 09atualizadores 15ou maior
+        msgl       0,11  00,1 para todo mundo
+        msgbase
+        halt
+      }
+      msgtopo
+      msgt 0SaintSeiya 14::0 Notícias
+      msgt 14"08 $+ $gettok(%news,2-,34) $+ 14"
+      msgdiv
+      var %x,%c = 15
+      while %n && (@new* !iswm %n) {
+        %t = $gettok(%n,1,32)
+        %n = $deltok(%n,1,32)
+        $replace(%t,+l,msgl,+c,msgt,+r,msgr,+a,msgtd,+d,msgdiv,+,msgt) $iif(%t != +,%n)
+        %n = $fread(new)
+      }
+      if  ($left(%n,5) == @NEWE) var %enq = $gettok(%n,3,32)
+      if %enq { 
+        %enq = $enquete(%enq)
+        msgdiv 
+        msgt 0SaintSeiya 14::00 Enquete
+        msgt 14"08 $+ $noqt($gettok(%enq,7-,32)) $+ 14"
+        msgt | mostra.enquete $gettok(%enq,2,32)
+        msgl
+        msgt Para votar nesta enquete digite 09!Enquete $gettok(%enq,2,32)
+      }
+      msgt | msgtd
+      var %n = 0
+      .fclose new
+      while ($read($comments.path,s,@NEW $1,$iif(!%n,0,$calc($readn + 1)))) inc %n
+      msgtd Esta new $iif(%n,possui09 %n,4não possui) 15 $+ $iif(%n = 1,comentário,comentários) $+ .
+      msgtd Para 0comentar15, digite08 !Comentar $1 <comentário>
+      msgtd Para 0visualizar 15os comentários, digite 11!Comentários $1
+      msgtd | msgt
+      msgt Postada por0 $gettok(%news,3,32) 15em09 $gettok(%news,4,32) 15ás09 $gettok(%news,5,32) $+ 14. 
+      msgbase
+    }
+    else { msgtopo | msgt A 0notícia 15selecionada não foi encontrada | msgbase }
+  }
+  else { msgtopo | msgt Parâmetro 0Faltando14! | msgt Você precisa indicar uma 0notícia 15para ler. | msgt 14Ex: 9!NEW 01 | msgbase }
+}
+alias com_chat_!news {
+  id.check = 
+
+  if ($1 == search) com_chat_!newsearch $2-
+  else {
+    msgtopo | msgt 9News | msgt Arquivo de Notícias do 11SaintSeiya | msgdiv
+
+    if ($fopen(news)) .fseek news 0
+    else .fopen news $news.path
+    .fseek -w news @NEW *
+    var %pos,%news
+    while (!$feof(news)) {
+      %news = $addtok(%news,$fopen(news).pos,44)
+      .noop $fread(news)
+      .fseek -w news @NEW *
+    }
+
+    var %n = $fread(news),%y,%np
+    var %x = $numtok(%news,44),%y = 1,%lv
+    var %z = $int($calc(%x / 5))
+    var %x = %x - $calc(($iif($1,$1,1) - 1) * 5)
+
+    while (0 < %x) && (%y < 6) {
+      .fseek news $gettok(%news,%x,44)
+      %n = $fread(news)
+      %lv = $iif($left($fread(news),6) == @NEWLV,$gettok($v1,3,32),0)
+      %cor = $+(01,$chr(44),$iif(%lv,$replace(%lv,+,09,@,08,!,04),11))
+      msgl %cor $+ $center($gettok(%n,2,32),3) $+ 09,01  $gettok(%n,2-,34) 
+      msgl %cor $+    15,1   Por00 $gettok(%n,3,32) 15em08 $gettok(%n,4,32) 15ás08 $gettok(%n,5,32)
+      var %i = 0
+      while ($read($comments.path,s,@NEW $gettok(%n,2,32),$iif(!%i,0,$calc($readn + 1)))) inc %i
+      msgl %cor $+    14,1   $iif(%i = 0,Sem,%i) comentário $+ $iif(%i != 1,s)
+      msgt
+      dec %x | inc %y
+    }
+    if %y = 1 { msgt Nenhuma 0notícia 15encontrada }
+    else {
+      var %y | while 0 < %z { %y = $iif($iif($1,$int($1),1) = %z,08 $+ %z $+ 00,%z) %y | dec %z }
+      msgdiv
+      msgt Página 00 $+ %y
+      msgdiv
+      msgt Para ler uma notícia na íntegra, digite 
+      msgt 11!New <0numero_da_new11>
+      msgt 14Ex: 9!New 1
+    }
+    msgbase
+    .fclose news
+  }
+}
+on *:chat:*:{
+  if !postar = $strip($1) {
+    id.check | op.check @ =
+    remini $dados($nick) $nick chat
+    hadd -m $nick postar 1
+    msgtopo 
+    msgt 0Postando uma 15notícia 0no 11SaintSeiya 
+    msgt ¯¯¯¯¯¯¯¯ ¯¯¯ ¯¯¯¯¯¯¯ ¯¯ ¯¯¯¯¯¯¯¯¯¯
+    msgl 0Instruções:
+    msgl  9·15 Use 8cores15 e sublinhados a vontade, mas evite  
+    msgl    14negrito15, pois este será 4ignorado14.
+    msgl  9·15 Para 0alinhar 15o seu texto, use os seguintes
+    msgl    identificadores:
+    msgl      14>8 +c 14-15 Alinha no centro do quadro
+    msgl      14>8 +l 14-15 Alinha na esquerda do quadro (14padrão15)
+    msgl      14>8 +r 14-15 Alinha na direita do quadro
+    msgl      (14Antes do texto :P15)
+    msgl      14>8 +d 14-15 Linha divisória
+    msgl  9·15 Faça um texto 0auto-suficiente 15e bem elaborado
+    msgl  9·15 14Aviso15: Linhas muito cumpridas são 'particionadas' 
+    msgl    para caberem no quadro. Evite usar palavras 
+    msgl    gigantescas para não ficar buracos no texto.
+    msgl  9· 15Para deixar uma linha em 0branco15, digite 14'7+14'
+    msgt
+    msgl Para começar, digite um 8título 15para a sua notícia:
+    msgl 15(14Com menos de 50 caracteres15)
+    msgl | halt
+  }
+  if $hget($nick,postar) = 1 {
+    if $len($strip($1-)) <= 50 {
+      hadd $nick new.titulo $strip($1-) | hadd $nick postar 2 | hadd $nick new.linha 1
+      msgl
+      msgl Ok, título setado
+      msgl   14> "08 $+ $strip($1-) $+ 14"
+      msgl 
+      msgl Escreva o 8conteúdo 15da sua notícia:
+      msgl Para 0terminar15, digite somente um 14'8.14'
+      msgl | halt
+    }
+    else { msgl 4Leia direito15, o título só pode ter até 0050 caracteres14! }
+  }
+  if $hget($nick,postar) = 2 {
+    if $strip($1-) = . {
+      hadd $nick postar 3
+      msgl
+      msgl Ok, você acabou de '9ditar15' a sua 0notícia14. 
+      msgl Caso você queira setar um tempo para a notícia  
+      msgl   9expirar15, e ser deletada, digite um 0número 15(14em dias15)
+      msgl
+      msgl Para 0acoplar uma enquete, digite 14"8ENQUETE <ID>14"
+      msgl Para setar o 0level de acesso 15a esta notícia digite:
+      msgl  09+15 para liberar somente para 0atualizadores 15ou level maior
+      msgl  08@15 para liberar somente para 0operadores 15ou level maior
+      msgl  04!15 para liberar somente para 0administradores
+      msgl Para 0prever 15o resultado final, digite 14"8PREVER14"
+      msgl Para 0postar 15a notícia, digite 14"8POSTAR14"
+      msgl Para 0cancelar15 a postagem, digite 14"8CANCELAR14"
+      msgl | halt
+    }
+    else { 
+      hadd $nick $+(new.linha.,$hget($nick,new.linha)) $iif($gettok($strip($1),1,32) isin +c +l +r +a +d,$remove($1-,),+l $remove($1-,)) 
+      hinc $nick new.linha
+    }
+  }
+  if $hget($nick,postar) = 3 {
+    if $strip($1) = postar {
+      var %n = $read($news.path,s,@NEW),%z = $iif($gettok(%n,1,32),$gettok(%n,1,32),0)
+      if %n {
+        while %n { 
+          %n = $read($news.path,s,@NEW,$calc($readn + 1)) 
+          if %n { %z = $gettok(%n,1,32) }
+        }
+      }
+      inc %z
+      write $news.path @NEW %z $nick $date $time $iif($hget($nick,new.expire),$calc($ctime + $hget($nick,new.expire) *24*60*60),0) " $+ $hget($nick,new.titulo) $+ "
+      if ($h?(new.lv)) write $news.path @NEWLV %z $h?(new.lv)
+      var %x = 1
+      while %x <= $hfind($nick,new.linha.*,0,w) { write $news.path $hget($nick,new.linha. $+ %x) | inc %x }
+      if ($h?(new.enquete)) write $news.path @NEWE %z $h?(new.enquete)
+      msgl | msgl News 0postada14!
+      msgt Sua notícia foi 0postada 15com o número de identificação
+      msgt 14>08 %z 14<
+      msgbase 
+      hdel -w $nick new.*
+      hdel $nick postar
+      msg #cdzforever 0,1 0,14 15,1 Uma nova 9notícia 15foi postada no bot por08 $nick $+ 14. 15Para 0ler 15esta new, digite no chat do bot 11!NEW %z $+ 14. 15Para ver todas as 0news 15postadas, digite, também no chat, 11!News14. 0,14 0,1 
+      halt
+    }
+    if $strip($1) = enquete {
+      var %id = $strip($2)
+      if %id {
+        if $read($enquete,s,@ENQH %id) { 
+          h+ new.enquete %id
+          msgl | msgl Enquete de id08 %id 15adicionada! | msgl
+          halt
+        }
+        else { msgl ID09 %id 15de enquete 7inválido15. }
+      }
+      else { msgl Indique o 0ID 15de uma enquete. }
+    }
+    if $strip($1) = prever {
+      msgl | msgl 8Prevendo14...
+      msgtopo | msgt 0SaintSeiya 14::0 Notícias | msgt 14"08 $+ $hget($nick,new.titulo) $+ 14"
+      msgdiv
+      var %n = $hget($nick,new.linha.1),%y = 2
+      while %n {
+        %t = $gettok(%n,1,32)
+        %n = $deltok(%n,1,32)
+        $replace(%t,+l,msgl,+c,msgt,+r,msgr,+a,msgtd,+d,msgdiv,+,msgt) $iif(%t != +,%n)       
+        %n = $hget($nick,new.linha. $+ %y)
+        inc %y
+      }
+      if $h?(new.enquete) { 
+        var %e = $enquete($h?(new.enquete))
+        msgdiv 
+        msgt 0SaintSeiya 14::00 Enquete
+        msgt 14"08 $+ $noqt($gettok(%e,7-,32)) $+ 14"
+        mostra.enquete $h?(new.enquete) 
+        msgl
+        msgt Para votar nesta enquete digite 09!Enquete $h?(new.enquete)
+      }
+      msgdiv | msgt Postada por0 $nick 15em09 $date 15ás09 $time $+ 14. | msgbase
+      msgl 15Prossiga14... | msgl | halt
+    }
+    if $istok(+ @ ! .,$strip($1),32) { 
+      msgl
+      msgl 0Nível 15de acesso para a new setado para:
+      msgl 08 $+ $replace($strip($1),+,Atualizadores ou maior,@,Operadores ou maior,!,Administradores)
+      msgl
+      h+ new.lv $strip($1) | halt 
+    }
+    if $strip($1) = Cancelar { msgl Ok, Postagem 4cancelada14... | hdel -w $nick new.* | halt }
+    if $strip($1) isnum 1- { hadd $nick new.expire $int($strip($1)) | msgl | msgl Tempo para a notícia 0expirar 15setada em08 $int($strip($1)) 15dia(14s15)14. | msgl | halt }
+    msgl 14Hein15?
+  }
+}
+
+
+alias com_chat_!comentar {
+  id.check =
+  if ($1) {
+    var %new = $read($news.path,s,@NEW $1)
+    if (%new) {
+      if ($2) {
+        write $comments.path @NEW $1 $nick $ctime $strip($2-)
+        msgtopo
+        msgt Seu 0comentário 15foi postado com8 sucesso15!
+        msgt Para 0visualizá-lo15, digite9 !comentários $1
+        msgbase
+      }
+      else msge Comentário inválido!¼Sintaxe:8 !comentar $1 <comentário>
+    }
+    else msge New08 $1 15não existe!
+  }
+  else msge Falta coisa a롼Sintaxe:8 !comentar <numero_da_new> <comentário>
+}
+
+alias com_chat_!comentarios com_chat_!comentários $1-
+alias com_chat_!comentários {
+  id.check =
+  if ($1) {
+    var %new = $read($news.path,s,@NEW $1)
+    var %lv = $read($news.path,s,@NEWLV $1)
+    if (%new) {
+      if (%lv) {
+        if ($oplv($nick) < $replace(%lv,@,2,!,3,+,1)) {
+          msgtopo
+          msgl 09News14:15 O acesso a esta notícia está 0bloqueado15.
+          msgl       Somente usuários com o 0nível15:
+          msgl      08 $replace(%lv,@,Operadores ou maior,+,Atualizadores ou maior,!,Administradores)
+          msgl       podem 0visualizar 15os comentários desta notícia.
+          msgl
+          msgl P14.15S14.:15 Uma breve legenda dos 0modos das news15:
+          msgl       0,04  15,1 para 4administradores
+          msgl       0,08  15,1 para 08operadores 15ou maior
+          msgl       0,09  15,1 para 09atualizadores 15ou maior
+          msgl       0,11  00,1 para todo mundo
+          msgbase
+          halt
+        }
+        var %t = $readn
+      }
+
+      window -c @comm | window -h @comm
+      var %comment = $read($comments.path,s,@NEW $1)
+
+      msgtopo
+      msgt 0Comentários 15da new08 $1
+      msgdiv
+
+      while (%comment) {
+        aline @comm %comment
+        %comment = $read($comments.path,s,@NEW $1,$calc($readn + 1))
+      }
+
+      var %i = $line(@comm,0),%t = %i,%l,%ago
+      var %min = $iif($2 isnum 1-,$calc($2 * 5),%i)
+      if (%min > %i) %min = %i
+      var %max = %min - 4
+
+      while (%i) {
+        if (%i isnum %max - %min) {
+          %l = $line(@comm,%i)
+          %ago = $tempo_aprox($calc($ctime - $gettok(%l,2,32)))
+          msgl $gettok(%l,3-,32)
+          msgr Por 8 $+ $gettok(%l,1,32) 15(14 $+ %ago $+ 15)
+          msgl
+        }
+        dec %i
+      }
+      msgdiv 
+      msgt Total de09 %t 15comentário $+ $iif(%t > 1,s)
+      var %p = Página14
+      while (%t > 0) {
+        if (%t isnum %max - %min) %p = %p 08 $+ $ceil($calc(%t / 5)) $+ 14
+        else %p = %p $ceil($calc(%t / 5))
+        dec %t 5
+      }
+      msgt %p
+      msgbase
+    }    
+    else msge New08 $1 15não encontrada!
+  }
+  else msge Tem coisa faltando ai!¼Uso:08 !comentários <new> [página]
+}
+alias com_help_!comentários return !Comentários¼Chat¼!Comentários <new> [página]¼Comando para listar comentários de uma determinada notícia.
+alias tempo_aprox {
+  if ($1 isnum 1-60) return há $1 segundos atrás
+  if ($1 isnum 1-3600) return há $floor($calc($1 / 60)) minutos atrás
+  if ($1 isnum 3600-86400) return há ± $floor($calc($1 / 3600)) hora $+ $iif($floor($calc($1 / 3600)) > 1,s)
+  if ($1 isnum 86400-172800) return Ontem ás $asctime($calc($ctime - $1),HH:nn)
+  if ($1 isnum 172800-604800) return há $floor($calc($1 / 86400)) dias atrás
+  if ($1 isnum 604800-2592000) return há $floor($calc($1 / 604800)) $iif($floor($calc($1 / 604800)) = 1,semana,semanas)
+  if ($1 isnum 2592000-31104000) return há $floor($calc($1 / 2592000)) $iif($floor($calc($1 / 2592000)) = 1,mês,meses)
+  if ($1 isnum 31104000-) return há $floor($calc($1 / 31104000)) $iif($floor($calc($1 / 31104000)) = 1,ano,anos)
+}
+alias tempo_certo {
+  var %t = $duration($1)
+  %t = $replace(%t,wk,semana,day,dia,hr,hora,min,minuto,sec,segundo)
+  %t = $mid($regsubex(%t,/([0-9]+)([a-z]+)/g,\1 \2 $+ $chr(44)),1,-1)
+  if ($1 > 60) %t = $gettok(%t,1- $+ $calc($numtok(%t,44) - 1),44) e $gettok(%t,$numtok(%t,44),44)
+  return %t
+}
+
+
+alias com_chat_!newsearch {
+  id.check = 
+
+  if ($1 isnum 0-) var %limit = $1,%search = $2-
+  else var %limit = 10,%search = $1-
+
+  ;; testes
+  if (!%search) msgehalt Você precicsa indicar uma 0palavra 15para a pesquisa.¼Ex: 09!NewSearch [limite] <pesquisa>
+
+  if ($fopen(news.search)) .fseek news.search 1
+  else .fopen news.search $news.path
+  if ($window(@news.search)) window -c @news.search
+  window -h @news.search
+
+  var %searchq = @NEW * "* $+ $replace($1-,$chr(32),*) $+ *"
+
+  var %new,%next,%i = 0
+  .fseek -w news.search %searchq
+  while (!$feof(news.search)) {
+    %new = a $gettok($fread(news.search),2-,32)
+    %next = $fread(news.search)
+    if ($left(%next,6) == @NEWLV) %new = $puttok(%new,$gettok(%next,3,32),1,32)
+    aline @news.search %new
+    .fseek -w news.search %searchq
+  }
+
+  msgtopo 
+  msgt SaintSeiya 14:: 0News 14:: 8Pesquisa
+  msgt 14"09 $+ %search $+ 14"
+
+  var %i = $line(@news.search,0),%t = %i,%l = 0
+  if (%i) msgdiv
+  while (%i && %limit) {
+    %new = $line(@news.search,%i)
+    msgl 1, $+ $replace($gettok(%new,1,32),a,11,+,08,@,04) $+ $center($gettok(%new,2,32),3) $+ 9,1 $noqt($gettok(%new,7-,32))
+    msgl 1, $+ $replace($gettok(%new,1,32),a,11,+,08,@,04) $+    15,1 Por0 $gettok(%new,3,32) 15em8 $gettok(%new,4,32) 15ás8 $gettok(%new,5,32)
+    msgl
+    dec %limit
+    dec %i
+    inc %l
+    if (!%limit && %i) { msgt 8... }
+  }
+  msgdiv
+  if (%t) {
+    msgt Mostrando08 %l 0de11 %t 0notícia $+ $iif(%t > 1,s) 15retornada $+ $iif(%t > 1,s).
+    if (%i && !%limit) { msgt 7Refine a sua pesquisa para melhores resultados. }
+  }
+  else msgt 4Nenhuma 15notícia foi encontrada para esta 0pesquisa15.
+  msgbase
+
+  .fclose news.search
+  .window -c @news.search
+}

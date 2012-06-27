@@ -1,0 +1,37 @@
+;; --------------------------------------------------------------------------------------
+;; Addon :: site_get_contents
+;; Puxa um site e retorna o conteúdo para um determinado alias
+;; --------------------------------------------------------------------------------------
+;; Uso: /site_get_contents site callback
+;; Exp: /site_get_contents http://cdzforever.net/saintseiya_callbacks/wcpdates.php?timers
+;; --------------------------------------------------------------------------------------
+
+alias -l sgce { echo SGC>>4ERR>> $+ $1- | halt }
+alias -l sw if ($sock($sockname).status == active) sockwrite -nt $sockname $1-
+alias site_get_contents {
+  if (!$1) sgce Parâmetro faltando. Uso: $site_get_contents(<pagina>,[callback])
+  noop $regex($1,/http:\/\/(.*?)\/(.*)/)
+  if ($regml(0) != 2) sgce Página inválida!
+  var %x = sgc. $+ $r(1,9999999999)
+  sockopen %x $regml(1) 80
+  sockmark %x 0 $regml(1) $regml(2) $iif($2,$2-)
+}
+on *:sockopen:sgc.*:{
+  tokenize 32 $sock($sockname).mark
+  sw GET / $+ $3 HTTP/1.1
+  sw Host: $2
+  sw Accept: text/html, application/xml
+  sw Connection: Keep-Alive
+  sw
+}
+on *:sockread:sgc.*:{
+  sockread %a
+  if (!$sockbr) sockclose $sockname
+  tokenize 32 $sock($sockname).mark
+  if (($1) && ($4)) $4 %a
+  elseif (!%a) sockmark $sockname 1 $2-
+}
+on *:sockclose:sgc.*:{
+  tokenize 32 $sock($sockname).mark
+  if ($5) $5
+}

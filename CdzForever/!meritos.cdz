@@ -1,0 +1,304 @@
+on *:chat:*:{
+  if ($strip($1) = !méritos) || ($strip($1) = !meritos) { 
+    id.check =
+    msgtopo
+    msgt 0Sistema de Méritos
+    msgt 15¯¯¯¯¯¯¯ ¯¯ ¯¯¯¯¯¯¯
+    msgt O 9Sistema de Méritos15 pode ser comparado aos 
+    msgt cartões de milhagens. Nele, você acumula 
+    msgt pontos (14os Méritos15), e futuramente pode usá-los
+    msgt de diversas maneiras, como por exemplo:
+    msgt 
+    msgt 14,14¯14,1¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯14,14¯0,1
+    msgt 14,14 14,1      · Trocando por Cosmo                 0,14 0,1
+    msgt 14,14 14,1      · Trocando por Ítens da Loja         0,14 0,1
+    msgt 14,14 14,1      · Desbloqueando Armaduras            0,14 0,1
+    msgt 14,14 14,1      · Entre outras vantagens             0,14 0,1
+    msgt 14,14 14,1                                           14,14 0,1
+    msgt 14¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+    msgt
+    msgt 0O que eu faço para acumular Méritos?
+    msgt ¯ ¯¯¯ ¯¯ ¯¯¯¯ ¯¯¯¯ ¯¯¯¯¯¯¯¯ ¯¯¯¯¯¯¯ 
+    msgt Os Méritos são conseguidos em 9eventos15, ou como 
+    msgt 9prêmio 15sobre a participação do usuário no canal.
+    msgt Você pode ganhar Méritos 9ajudando a organizar
+    msgt 9eventos15, 9projetos15, entre outros, sendo que 
+    msgt a distribuição dos Méritos para cada atividade
+    msgt é tabelada e imutável.
+    msgt
+    msgt 0Comandos Relacionados:
+    msgt ¯¯¯¯¯¯¯¯ ¯¯¯¯¯¯¯¯¯¯¯¯
+    msgt 14,14¯14,1¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯14,14¯0,1    
+    msgt 14,14 14,1  Comando       Descrição                        14,14¯0,1    
+    msgt 14,14 00,1  !Dados        15Mostra os dados e a quantidade   14,14¯0,1    
+    msgt 14,14 00,1                15de méritos acumulados            14,14¯0,1    
+    msgt 14,14 00,1  !Trocar       15Utiliza seus méritos acumulados  14,14¯0,1    
+    msgt 14,14 00,1  !Loja         15Loja com os itens que podem ser  14,14¯0,1    
+    msgt 14,14 00,1                15adquiridos com os seus méritos   14,14¯0,1    
+    msgt 14,14 14,1                                                 14,14 0,1    
+    msgt 14¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+    msgbase 
+  }
+  if $strip($1) = !trocar {
+    id.check =
+    if !$2 { 
+      msgtopo
+      msgt 0Trocar Méritos
+      msgt ¯¯¯¯¯¯ ¯¯¯¯¯¯¯
+      msgt Existem várias formas de utilizar os seus 
+      msgt méritos acumulados.
+      msgdiv
+      msgt 0Trocando seus Méritos por 9Cosmo
+      msgt A troca de Méritos por Cosmo segue a seguinte tabela
+      msgt 
+      msgt 14,14¯14,1¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯14,14¯0,1
+      msgt 0,14 8,1  1 0Mérito         15-14> 081 0Cosmo        0,14 0,1
+      msgt 0,14 8,1  10 0Méritos       15-14> 0820 0Cosmo       0,14 0,1
+      msgt 0,14 8,1  50 0Méritos       15-14> 08100 0Cosmo      0,14 0,1
+      msgt 0,14 8,1  100 0Méritos      15-14> 08250 0Cosmo      0,14 0,1
+      msgt 0,14 8,1  500 0Méritos      15-14> 081.300 0Cosmo    0,14 0,1
+      msgt 0,14 8,1  1.000 0Méritos    15-14> 082.700 0Cosmo    0,14 0,1
+      msgt 0,14 8,1  2.000 0Méritos    15-14> 085.500 0Cosmo    0,14 0,1
+      msgt 0,14 8,1  5.000 0Méritos    15-14> 0813.000 0Cosmo   0,14 0,1
+      msgt 0,14 8,1  10.000 0Méritos   15-14> 0828.000 0Cosmo   0,14 0,1
+      msgt 0,14 8,1  50.000 0Méritos   15-14> 08150.000 0Cosmo  0,14 0,1
+      msgt 0,14 8,1  100.000 0Méritos  15-14> 08500.000 0Cosmo  0,14 0,1
+      msgt 0,14 0,1                                     0,14 0,1
+      msgt 14¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+      msgt 0Para trocar seus Méritos por Cosmo, digite:
+      msgt 11!Trocar Cosmo 14<15méritos14>
+      msgt 0Ex14: 15!Trocar Cosmo 00550 14(15550 Méritos 14-0>15 1.400 Cosmo14)
+      msgdiv
+      msgt 0Trocando seus Méritos por 9Itens
+      msgt
+      msgt Você também pode trocar seus Méritos por Itens.
+      msgt 0Para isso digite 11!Loja 15+
+      msgt 0escolha o item, e digite 11!Trocar Item 14<15Item14>
+      msgt 0para adquiri-lo.
+      msgdiv
+      msgt 0Trocando seus méritos por um 9Título Personalizado
+      msgt
+      xmsgt Você pode trocar seus méritos por um 0título pessoal 15no bot. Esse título irá aparecer no topo dos seus dados. Para maiores informações, digite 11!Trocar Título
+      msgdiv
+      msgt 0Usando seus Méritos para 9Desbloquear uma Armadura
+      msgt Você pode usar os seus méritos para obter acesso a 
+      msgt uma armadura bloqueada no bot.
+      msgt Seguindo a seguinte tabela:
+      msgt
+      msgl        Armaduras11 Classe D 15-14> 0820.000 0Méritos
+      msgl        Armaduras11 Classe C 15-14> 0840.000 0Méritos
+      msgl        Armaduras11 Classe B 15-14> 0880.000 0Méritos
+      msgl        Armaduras11 Classe A 15-14> 08300.000 0Méritos
+      msgl        Armaduras11 Classe S 15-14> 082.000.000 0Méritos
+      msgt
+      msgt Para isso, digite 11!Trocar Desbloqueio 14<15Armadura14>
+      msgt 14Ps15: Este comando apenas irá desbloquear a armadura,
+      msgt portanto é aconselhável que você digite rapidamente 
+      msgt 11@Arm 14<0armadura14> 15após para pegá-la :D
+      msgbase
+    }
+    else { 
+      if $strip($2) = cosmo {
+        if ($user.treino.active) {
+          msg =$nick 1,1 14,14 9,1 $nick $+ 15, você 4não15 pode Trocar Méritos por Cosmo enquanto está treinando! 14,14 1,1 
+          halt
+        }
+        if $3 {
+          if $3 isnum 1- {
+            if $dados($nick,meritos) >= $remove($strip($3),.) {
+              var %x = 11,%p = $remove($strip($3),.),%m = 1.10.50.100.500.1000.2000.5000.10000.50000.100000,%m² = 1.20.100.250.1300.2700.5500.13000.28000.150000.500000,%c = 0,%aux
+              while %x >= 1 && %p {
+                if $gettok(%m,%x,46) <= %p {
+                  %c = $calc(%c + $int($calc(%p / $gettok(%m,%x,46))) * $gettok(%m²,%x,46))
+                  %p = $calc(%p - $gettok(%m,%x,46) * $int($calc(%p / $gettok(%m,%x,46))))
+                } | dec %x
+              }
+              hadd -m $nick trocar cosmo | hadd $nick valor %c | hadd $nick custo $remove($strip($3),.)
+              msgtopo $nick
+              msgt 0Trocando Méritos por Cosmo
+              msgt ¯¯¯¯¯¯¯¯ ¯¯¯¯¯¯¯ ¯¯¯ ¯¯¯¯¯
+              msgt Você está prestes a trocar: | msgt 
+              msgt 14- 08 $+ $div($remove($strip($3),.)) 0Méritos 14-
+              msgt 15por
+              msgt 14- 08 $div(%c) 15de 0Cosmo 14-
+              msgt | msgt Para confirmar a troca, digite 11!Trocar OK
+              msgbase
+            }
+            else { msgtopo | msgt 14- 4Erro 14- | msgt Você 7não15 possui08 $div($remove($strip($3),.)) 0Méritos 15para trocar! | msgbase $nick }
+          }
+          else { msgtopo | msgt 14- 4Erro 14- | msgt O número de 0méritos 15indicado está 7incorreto | msgt Use somente valores numéricos 0maiores que zero15. | msgbase $nick }
+        }
+        else { msgtopo | msgt 14- 4Erro 14- | msgt Parâmetro 7faltando15. A 0sintaxe 15deste comando é: | msgt 11!Trocar Cosmo 14<0Méritos14> | msgt 15Ex14: 0!Trocar Cosmo 40 | msgbase $nick }
+      }
+      elseif $strip($2) = título || $strip($2) = titulo {
+        if ($user.meritos.get < 500) msge Você não tem08 500 méritos 15para trocar por um 0título15!
+        elseif ($3) {
+          var %d = $strip($3-)
+          if ($len(%d)) <= 30) {
+            w+ $nick desc %d
+            user.meritos.retrieve $nick 500
+            msgtopo
+            msgt Você setou o seu 8título 15com sucesso!
+            msgt Foram removidos09 500 méritos 15do seu cadastro
+            msgbase
+          }
+          else msge O título indicado contém mais de08 30 caracteres15!
+        }
+        else {
+          msgtopo
+          msgt Trocando seus méritos por um 9Título Personalizado
+          msgt
+          xmsgt Você pode trocar seus méritos por um título pessoal no bot. Esse título irá aparecer no topo dos seus dados, algo como o exemplo abaixo:
+          msgdiv
+          msgt 0SaintSeiya 14:: 0Dados
+          msgt 14"Mão Leve" 08sega15
+          msgdiv
+          xmsgt O título pode vir antes, depois ou emaranhado ao seu nick. O bot irá verificar isso.
+          xmsgt 11Se o seu título não contiver o seu nick, ele irá adicionar o seu nick ao final do título.
+          msgt
+          msgt 0Exemplos:
+          msgt
+          msgt 0!Trocar Título "Mão Leve"        9--> 14"Mão Leve" 8sega 
+          msgt 0!Trocar Título The "sega" nator  9--> 14The "8sega14" nator
+          msgt 0!Trocar Título sega, o Impostor! 9--> 8sega14, o Impostor
+          msgt
+          xmsgt Não são aceitos caracteres 13coloridos15, nem títulos com mais de00 30 caracteres
+          msgt
+          msgtd
+          msgtd Troca de título infere em dedução de 08500 méritos
+          msgtd do seu cadastro
+          msgtd
+          msgt
+          msgt Para trocar o seu título, digite
+          msgt 8!Trocar Título 14<0novo_título14>
+          msgbase
+        }
+      }
+      elseif $strip($2) = desbloqueio {
+        var %armor = $remove($strip($3-),$chr(32))
+        if %armor {
+          if $readini(armaduras.ini,%armor,liberada) {
+            if $readini(armaduras.ini,%armor,liberada) != sim {
+              var %c = $replace($readini(armaduras.ini,%armor,classe),D,20000,C,40000,B,80000,A,300000,S,2000000)
+              if %c <= $dados($nick,meritos) {
+                hadd -m $nick trocar armor | hadd $nick valor %armor | hadd $nick custo %c
+                msgtopo $nick
+                msgt 0Desbloqueando Armadura
+                msgt ¯¯¯¯¯¯¯¯¯¯¯¯¯ ¯¯¯¯¯¯¯¯ 
+                msgt Você está tentando desbloquear a armadura | msgt 
+                msgt 14- 08 $+ $readini(armaduras.ini,%armor,arm) 14-
+                msgt 00Classe $readini(armaduras.ini,%armor,classe)
+                msgt 15com o custo de
+                msgt 14- 08 $div(%c) 15Méritos 14-
+                msgt | msgt Para confirmar, digite 11!Trocar OK
+                msgbase
+              }
+              else { msgtopo | msgt 14- 4Erro 14- | msgt Você 7não15 possui os 0Méritos 15necessários para | msgt desbloquear esta armadura | msgt 0Méritos Necessários15:11 $div(%c) | msgbase $nick }
+            }          
+            else { msgtopo | msgt 14- 4Erro 14- | msgt Esta armadura já está 0desbloqueada15! | msgbase $nick }
+          }
+          else { msgtopo | msgt 14- 4Erro 14- | msgt Armadura 0Inválida | msgt Verifique a ortografia ;D | msgbase $nick }
+        }
+        else { msgtopo | msgt 14- 4Erro 14- | msgt Parâmetro 7faltando15. A 0sintaxe 15deste comando é: | msgt 11!Trocar Desbloqueio 14<0Armadura14> | msgt 15Ex14: 0!Trocar Desbloqueio Hades | msgbase $nick }
+      }
+      elseif $strip($2) = item {
+        if $3 {
+          var %item = $gettok($read(sys/itens.ini,w,$strip($3-) $+ .*),1,46),%c = $gettok($read(sys/itens.ini,w,$strip($3-) $+ .*),2,46)
+          if %item {
+            if $dados($nick,meritos) >= %c {
+              hadd -m $nick trocar item | hadd $nick valor %item | hadd $nick custo %c
+              msgtopo $nick
+              msgt 0Trocando Méritos por Itens
+              msgt ¯¯¯¯¯¯¯¯ ¯¯¯¯¯¯¯ ¯¯¯ ¯¯¯¯¯ 
+              msgt Você está tentando adquirir o Item | msgt 
+              msgt 14-08 %item 14-
+              msgt 15com o custo de
+              msgt 14- 08 $div(%c) 15Méritos 14-
+              msgt | msgt Para confirmar a troca, digite 11!Trocar OK
+              msgbase
+            }
+            else { msgtopo | msgt 14- 4Erro 14- | msgt Você 7não15 possui os 0Méritos 15necessários para | msgt adquirir este 0Item15. | msgt 0Méritos Necessários15:11 $div(%c) | msgbase $nick }
+          }          
+          else { msgtopo | msgt 14- 4Erro 14- | msgt Item 0Inválido | msgt Procure o nome 0correto 15do item na loja | msgt 14> 11!Loja14 < | msgbase $nick }
+        }
+        else { msgtopo | msgt 14- 4Erro 14- | msgt Parâmetro 7faltando15. A 0sintaxe 15deste comando é: | msgt 11!Trocar Item 14<0Item14> | msgt 15Ex14: 0!Trocar Item Peso 1 Ton | msgbase $nick }
+      }
+      elseif $strip($2) = ok && $hget($nick,trocar) {
+        if $hget($nick,trocar) = armor {
+          %armor = $hget($nick,valor)
+          if $readini(armaduras.ini,%armor,liberada) != sim && $dados($nick,meritos) >= $hget($nick,custo)  {
+            writeini armaduras.ini %armor liberada Sim 
+            writeini $dados($nick) $nick meritos $calc($dados($nick,meritos) - $hget($nick,custo))
+            msgtopo
+            msgt 0Armadura Desbloqueada
+            msgt ¯¯¯¯¯¯¯¯ ¯¯¯¯¯¯¯¯¯¯¯¯
+            msgt Você 0desbloqueou 15a armadura de 
+            msgt 14>08 $readini(armaduras.ini,%armor,arm) 14<
+            msgt Para usá-la, digite 9@Arm $readini(armaduras.ini,%armor,arm)
+            msgt e espere a confirmação de um Operador. | msgbase
+          }
+          else { msgtopo | msgt Um 0erro 15ocorreu durante o processo de 8Desbloqueio15: | msgl 14>0 A Armadura foi desbloqueada por outro usuário; | msgl 14>0 ou você não possui mais os méritos necessários | msgt Caso nenhuma dessas seja verdadeira, tente novamente. | msgbase }
+        }
+        if $hget($nick,trocar) = item {
+          if $dados($nick,meritos) >= $hget($nick,custo)  {
+            %item = $hget($nick,valor)
+            writeini $dados($nick) $nick Itens $dados($nick,itens) $+ , $+ %item
+            writeini $dados($nick) $nick meritos $calc($dados($nick,meritos) - $hget($nick,custo))
+            msgtopo | msgt 0Item Adquirido | msgt ¯¯¯¯ ¯¯¯¯¯¯¯¯¯ | msgt Você trocou seus méritos pelo 0Item | msgt 14>08 %item 14< | msgbase
+          }
+          else { msgtopo | msgt Um 0erro 15ocorreu durante o processo de 8Desbloqueio15: | msgl 14>0 ou você não possui mais os méritos necessários | msgt Caso nenhuma dessas seja verdadeira, tente novamente. | msgbase }
+        }
+        if $hget($nick,trocar) = cosmo {
+          if $dados($nick,meritos) >= $hget($nick,custo)  {
+            writeini $dados($nick) $nick cosmo $calc($dados($nick,cosmo) + $hget($nick,valor))
+            writeini $dados($nick) $nick meritos $calc($dados($nick,meritos) - $hget($nick,custo))
+            msgtopo | msgt 0Cosmo Adquirido | msgt ¯¯¯¯¯ ¯¯¯¯¯¯¯¯¯ | msgt Você trocou seus méritos por | msgt 14>08 $div($hget($nick,valor)) 15de 0Cosmo 14< | msgbase
+          }
+          else { msgtopo | msgt Um 0erro 15ocorreu durante o processo de 8Desbloqueio15: | msgl 14>0 ou você não possui mais os méritos necessários | msgt Caso nenhuma dessas seja verdadeira, tente novamente. | msgbase }
+        }
+        hdel $nick trocar
+      }
+      elseif !$istok(item desbloqueio cosmo título titulo,$strip($2),32) { msgtopo | msgt Por enquanto as seções de troca são apenas: | msgt 11Cosmo15,11 Item 15e11 Desbloqueio | msgbase }
+    }
+  }
+  if !m??? iswm $strip($1) {
+    tokenize 32 $strip($1-) | var %x = $mid($1,3-)
+    if $istok(add del,%x,32) {
+      op.check @ = 
+      if $4 { 
+        if $dados($2,nick) {
+          if $3 isnum 1- {
+            write $logs(adddelmeritos) $date $time $chr(124) $replace(%x,add,Adicionados,del,Removidos) $div($remove($3,.)) méritos ao usuário $2 pelo operador $nick ( $+ $4- $+ )
+            .writeini $dados($2) $2 meritos $calc($dados($2,meritos) $replace(%x,add,+,del,-) $remove($3,.)) 
+            msg #cdzforever 0,1 0,14 15,1 Foram  $+ $replace(%x,add,adicionados,del,removidos) $+ 08 $div($3) 0Méritos 15 $+ $replace(%x,add,para o,del,do) cavaleiro9 $2 $+ 15. 0,14 0,1  
+            memosend $2 SaintSeiya Foram  $+ $replace(%x,add,adicionados,del,removidos) $+ 08 $div($3) 0Méritos15 $replace(%x,add,ao,del,do) seu cadastro, relativos à(ao) $4-
+          }
+          else { .msg =$nick 0,1 0,14 15,1 Valor 7inválido15. Escolha valores 0numéricos 15maiores que zero 0,14 0,1  }
+        } 
+        else { .msg =$nick 0,1 0,14 15,1 O nick 14"00 $+ $2 $+ 14 não está cadastrado no bot. 0,14 0,1  }
+      } 
+      else { msg =$nick 0,1 0,14 15,1 Parâmetro 0Faltando15. Sintaxe:11 $1 14<15nick14> <15méritos14> <15Motivo/Evento14> 0,14 0,1  }
+    }
+  }
+}
+on *:text:*:*:{
+  if !m??? iswm $strip($1) {
+    tokenize 32 $strip($1-) | var %x = $mid($1,3-)
+    if $istok(add del,%x,32) {
+      op.check @ =
+      if $4 { 
+        if $dados($2,nick) {
+          if $3 isnum 1- { 
+            write $logs(adddelmeritos) $date $time $chr(124) $replace(%x,add,Adicionados,del,Removidos) $div($remove($3,.)) méritos $replace(%x,add,ao,del,do) usuário $2 pelo operador $nick
+            .writeini $dados($2) $2 meritos $calc($dados($2,meritos) $replace(%x,add,+,del,-) $remove($3,.)) 
+            msg #cdzforever 0,1 0,14 15,1 Foram  $+ $replace(%x,add,adicionados,del,removidos) $+ 08 $div($3) 0Méritos 15 $+ $replace(%x,add,para o,del,do) cavaleiro9 $2 $+ 15. 0,14 0,1  
+            memosend $2 SaintSeiya Foram  $+ $replace(%x,add,adicionados,del,removidos) $+ 08 $div($3) 0Méritos15 $replace(%x,add,ao,del,do) seu cadastro, relativos à14(15ao14)09  $4-
+          }
+          else { .notice $nick 0,1 0,14 15,1 Valor 7inválido15. Escolha valores 0numéricos 15maiores que zero 0,14 0,1  }
+        } 
+        else { .notice $nick 0,1 0,14 15,1 O nick 14"00 $+ $2 $+ 14 não está cadastrado no bot. 0,14 0,1  }
+      } 
+      else { .notice $nick 0,1 0,14 15,1 Parâmetro 0Faltando15. Sintaxe:11 $1 14<15nick14> <15méritos14> <15Motivo/Evento14> 0,14 0,1  }
+    }
+  }
+}

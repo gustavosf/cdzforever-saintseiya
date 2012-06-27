@@ -1,0 +1,294 @@
+alias enquete { 
+  if (!$1) return $enq.path
+  return $read($enq.path,w,$+(@ENQH $1,$chr(32),*))
+}
+
+on *:chat:*:{
+  if ($strip($1) = !enquete) || ($strip($1) = !enquetes) {
+    tokenize 32 $strip($1-)
+    if !$2 {
+      msgtopo
+      msgt 9Enquetes
+      msgt Arquivo de Enquetes do 11SaintSeiya
+      msgdiv
+
+      var %x = 1,%y = 1,%enq,%enqs
+      while $read($enquete,s,@ENQH,%x) { 
+        %enqs = $addtok(%enqs,$readn,44) 
+        %x = $readn + 1
+      }
+      %x = $numtok(%enqs,44)
+      while (%x) && (%y <= 5) {
+        %enq = $gettok(%enqs,%x,44)
+        %e = $read($enquete,%enq)
+        msgl 1,11 $+ $gettok(%e,2,32) $+ 9,1  $noqt($gettok(%e,7-,32))
+        msgl 1,11   15,1   Por00 $gettok(%e,3,32) 15em08 $gettok(%e,4,32) 15ás08 $gettok(%e,5,32)
+        msgl 1,11   15,1   Total de votos:00 $gettok($read($enquete,s,@ENQT ,$readn),2,32)
+        msgl 
+        inc %y | dec %x
+      }
+      msgdiv
+      msgt Para ver o conteúdo de uma enquete, digite 
+      msgt 11!Enquete <0número_da_enquete11>
+      msgt 14Ex: 09!Enquete a1b
+      msgbase
+    }
+    else {
+      var %e = $enquete($2),%l = $readn,%id = $2
+      if (%e) {
+        hadd -m $nick enquete $2
+        msgtopo
+        msgt 0SaintSeiya 14::0 Enquetes
+        msgt 14"08 $+ $noqt($gettok(%e,7-,32)) $+ 14"
+        msgdiv
+
+        var %txt = $read($enquete,s,@ENQM %id,%l),%t = $readn,%tmsg,%msg,%x,%cor,%cor2
+        while (%txt) {
+          %tmsg = $replacex($gettok(%txt,1,32),+l,xmsgl,+c,xmsgt,+r,xmsgr,+a,msgtd,+d,msgdiv,+,msgl)
+          %msg = $gettok(%txt,2-,32)
+          %cor = 15
+          while ($len(%msg) > 57) {
+            %x = 1
+            while ($len($gettok(%msg,$+(1-,%x),32)) < 57) && ($numtok(%msg,32) >= %x) { inc %x }
+            dec %x
+            %tmsg %cor $+ $gettok(%msg,$+(1-,%x),32)
+            %cor2 = $ultima.cor($gettok(%msg,$+(1-,%x),32))
+            if (%cor2 != ) { %cor = %cor2 }
+            %msg = $deltok(%msg,$+(1-,%x),32)
+          }
+          %tmsg %cor $+ %msg
+          inc %t
+          %txt = $read($enquete,s,@ENQM %id,%t)
+        }
+        msgdiv
+
+        mostra.enquete $2
+        msgdiv 
+        msgt Para 0votar 15em uma das opções acima, digite:
+        msgt 9!Votar <0numero9>
+        msgt Lembrando que você só pode votar 9uma vez 15em cada enquete.
+        msgdiv
+        msgt Postada por00 $gettok(%e,3,32) 15em09 $gettok(%e,4,32) 15ás09 $gettok(%e,5,32) $+ 15.
+        msgbase
+      }
+      else {
+        msgtopo
+        msgl 9Enquete14:15 ID 0Inválida15.
+        msgl          15A enquete indicada 4não 15existe
+        msgl          15Digite 09!Enquete 15para ver as 0enquetes 15postadas.
+        msgbase
+      }
+    }
+  }
+  if ($strip($1) = !votar) {
+    if ($readini users/ $+ $nick $+ .ini $nick Cosmo < 2000) || ($readini users/ $+ $nick $+ .ini $nick Cosmo == $null) { /msg =$nick 1,1 14,14 0,1 Você precisa ter mais de 2000 de cosmo pra poder votar. 14,14 1,1  | halt }
+    var %e = $h?(enquete),%opc = $strip($2)
+    if %e {
+      if %opc {
+        var %voto = $read($enquete,s,@ENQV %e )
+        if (!$istok(%voto,$nick,32)) {
+          %voto = $read($enquete,w,@ENQA $+ %opc %e *)
+          if %voto {
+            msgtopo 
+            msgt 0SaintSeiya 14::0 Enquetes
+            msgt 8Registrando o seu voto
+            msgdiv
+            %voto = $gettok(%voto,1-2,32) $calc($gettok(%voto,3,32) + 1) $gettok(%voto,4-,32)
+            write $+(-l,$readn) $enquete %voto
+            msgt Você votou na opção
+            msgt 14"08 $+ $gettok(%voto,4-,32) $+ 14"
+            %voto = $read($enquete,s,@ENQT %e ,$readn)
+            write $+(-l,$readn) $enquete @ENQT %e $calc(%voto + 1)
+            %voto = $read($enquete,s,@ENQV %e ,$readn)
+            write $+(-l,$readn) $enquete @ENQV %e %voto $nick
+            msgt
+            mostra.enquete $h?(enquete)
+            msgbase
+          }
+          else {
+            msgtopo
+            msgl 9Enquete14:15 Opção 0inválida15.
+            msgl          15A Opção desejada não existe nesta enquete.
+            msgl          15Digite 09!Enquete $h?(enquete) 15para ver as opções 0válidas15.
+            msgbase
+          }
+        }
+        else {
+          msgtopo
+          msgl 9Enquete14:15 Você já votou nesta 0enquete15.
+          msgl          15Você pode votar somente 08uma 15vez em cada enquete.
+          msgbase
+        }
+      }
+      else {
+        msgtopo
+        msgl 9Enquete14:15 Parâmetro 0Faltando15.
+        msgl          15Você precisa indicar uma 0opção 15para votar.
+        msgl          15Digite 09!Enquete $h?(enquete) 15para ver as opções 0válidas15.
+        msgbase
+      }
+    }
+    else {
+      msgtopo
+      msgl 9Enquete14:15 Você não selecionou 0nenhuma 15enquete para votar.
+      msgl          15Digite 08!Enquetes 15para ver o arquivo de enquetes.
+      msgl          15Selecione uma, e então, digite 09!Votar <0opção9>15.
+      msgbase
+    }
+  }
+  if !EPostar = $strip($1) {
+    id.check | op.check @ =
+    if (!$h?(postar)) { 
+      remini $dados($nick) $nick chat
+      h+ epostar 1
+      msgtopo 
+      msgt 0Postando uma 15enquete 0no 11SaintSeiya 
+      msgt ¯¯¯¯¯¯¯¯ ¯¯¯ ¯¯¯¯¯¯¯ ¯¯ ¯¯¯¯¯¯¯¯¯¯
+      msgl 0Instruções:
+      msgl  9·15 Use 8cores15 e sublinhados a vontade, mas evite  
+      msgl    14negrito15, pois este será 4ignorado14.
+      msgl  9·15 Para 0alinhar 15o seu texto, use os seguintes
+      msgl    identificadores:
+      msgl      14>8 +c 14-15 Alinha no centro do quadro
+      msgl      14>8 +l 14-15 Alinha na esquerda do quadro (14padrão15)
+      msgl      14>8 +r 14-15 Alinha na direita do quadro
+      msgl      (14Antes do texto :P15)
+      msgl      14>8 +d 14-15 Linha divisória
+      msgl  9·15 Faça um texto 0auto-suficiente 15e bem elaborado
+      msgl  9·15 14Aviso15: Linhas muito cumpridas são 'particionadas' 
+      msgl    para caberem no quadro. Evite usar palavras 
+      msgl    gigantescas para não ficar buracos no texto.
+      msgl  9· 15Para deixar uma linha em 0branco15, digite 14'7+14'
+      msgt
+      msgl Para começar, digite um 8título 15para a sua enquete:
+      msgl 15(14Com menos de 50 caracteres15)
+      msgl | halt
+    }
+  }
+  if $h?(epostar) = 1 {
+    if $len($strip($1-)) <= 50 {
+      h+ enq.titulo $strip($1-) | h+ epostar 2 | h+ enq.linha 1
+      msgl
+      msgl Ok, título setado
+      msgl   14> "08 $+ $strip($1-) $+ 14"
+      msgl 
+      msgl Escreva o 8conteúdo 15da sua enquete:
+      msgl Para 0terminar15, digite somente um 14'8.14'
+      msgl | halt
+    }
+    else { msgl 4Leia direito15, o título só pode ter até 0050 caracteres14! }
+  }
+  if $hget($nick,epostar) = 2 {
+    if $strip($1-) = . {
+      hadd $nick epostar 3 | h+ enq.linha 1
+      msgl
+      msgl Ok, você acabou de 14'9ditar14'15 a sua 0enquete14. 
+      msgl Agora vamos setar as 9opções válidas 15para esta enquete.
+      msgl Digite na sequencia, 8linha por linha15, as 0opções 15desejadas
+      msgl
+      msgl Para 0finalizar15, digite somente um 14'8.14'
+      msgl | halt
+    }
+    else { 
+      h+ $+(enq.linha.,$h?(enq.linha)) $iif($gettok($strip($1),1,32) isin +c +l +r +a +d,$remove($1-,),+l $remove($1-,)) 
+      hinc $nick enq.linha
+    }
+  }
+  if ($h?(epostar) = 3) { 
+    if $strip($1-) = . {
+      h+ epostar 4
+      msgl
+      msgl Ok, foram selecionadas08 $calc($h?(enq.linha) - 1) 15opções para esta enquete.
+      msgl 0Vamos terminar a configuração da mesma.
+      msgl
+      msgl Para 0prever 15o resultado final, digite 14"8PREVER14"
+      msgl Para 0postar 15a notícia, digite 14"8POSTAR14"
+      msgl Para 0cancelar15 a postagem, digite 14"8CANCELAR14"
+      msgl | halt
+    }
+    else { 
+      h+ $+(enq.opc.,$h?(enq.linha)) $1-
+      hinc $nick enq.linha
+    }
+  }
+
+  if $h?(epostar) = 4 {
+    if $strip($1) = postar {
+      var %n = $+($r(a,z),$r(0,9),$r(a,z))
+      while $read($enquete,s,@ENQH %n) { %n = $+($r(a-z),$r(0-9),$r(a-z)) }
+      write $enquete @ENQH %n $nick $date $time $chr(124) " $+ $h?(enq.titulo) $+ "
+      var %x = 1
+      while %x <= $hfind($nick,enq.opc.*,0,w) { write $enquete @ENQA $+ %x %n 0 $hget($nick,enq.opc. $+ %x) | inc %x }
+      write $enquete @ENQT %n 0
+      write $enquete @ENQV %n
+      var %x = 1
+      while %x <= $hfind($nick,enq.linha.*,0,w) { write $enquete @ENQM %n $hget($nick,enq.linha. $+ %x) | inc %x }
+      msgl | msgl Enquete 0postada14!
+      msgt Sua Enquete foi 0postada 15com a identificação
+      msgt 14>08 %n 14<
+      msgbase
+      h- enq.*
+      h- epostar
+      ;msg #cdzforever 0,1 0,14 15,1 Uma nova 9enquete 15foi postada no bot por08 $nick $+ 14. 15Para 0ler 15esta enquete, digite no chat do bot 11!enquete %n $+ 14. 15Para ver todas as 0enquetes15, digite, também no chat, 11!Enquete14. 0,14 0,1 
+      halt
+    }
+    if $strip($1) = prever {
+      msgl | msgl 8Prevendo14...
+      msgtopo | msgt 0SaintSeiya 14::0 Enquetes | msgt 14"08 $+ $h?(enq.titulo) $+ 14"
+      msgdiv
+
+      var %txt = $h?(enq.linha.1),%tmsg,%msg,%x,%cor,%t = 1
+      while (%txt) {
+        %tmsg = $replacex($gettok(%txt,1,32),+l,xmsgl,+c,xmsgt,+r,xmsgr,+a,msgtd,+d,msgdiv,+,msgl)
+        %msg = $gettok(%txt,2-,32)
+        %cor = 15
+        while ($len(%msg) > 57) {
+          %x = 1
+          while ($len($gettok(%msg,$+(1-,%x),32)) < 57) && ($numtok(%msg,32) >= %x) { inc %x }
+          dec %x
+          %tmsg %cor $+ $gettok(%msg,$+(1-,%x),32)
+          %cor2 = $ultima.cor($gettok(%msg,$+(1-,%x),32))
+          if (%cor2 != ) { %cor = %cor2 }
+          %msg = $deltok(%msg,$+(1-,%x),32)
+        }
+        %tmsg %cor $+ %msg
+        inc %t
+        %txt = $h?(enq.linha. $+ %t)
+      }
+      msgdiv | msgt Postada por0 $nick 15em09 $date 15ás09 $time $+ 14. | msgbase
+      msgl 15Prossiga14... | msgl | halt
+    }
+    if $strip($1) = Cancelar { msgl Ok, Postagem 4cancelada14... | h- enq.* | h- epostar | halt }
+    msgl 14Hein15?
+  }
+}
+
+alias mostra.enquete {
+  ; mostra.enquete <id_da_enquete>
+  var %e = $enquete($1),%l = $readn
+  var %total = $read($enquete,s,@ENQT $1 ,%l),%tam = 0
+  var %txt = $read($enquete,w,@ENQA*,%l),%t = $readn
+  if ($window(@enquete)) window -c @enquete
+  else window -h @enquete
+  while (@ENQA* iswm $gettok(%txt,1,32)) {
+    if ($len($gettok(%txt,4-,32)) > %tam) { %tam = $len($gettok(%txt,4-,32)) }
+    aline @enquete %txt
+    inc %t
+    %txt = $read($enquete,%t)
+  }
+  var %y = 36 - %tam
+  %t = $line(@enquete,1)
+  %x = 1
+  var %votos,%pct,%s
+  while %t {
+    %votos = $gettok(%t,3,32)
+    %pct = $round($calc((%votos *100)/%total),1)
+    %p = $int($calc((61 / 100) * %pct))
+    %s = $lefter($chr(160) $+ $gettok(%t,4-,32),44) $+ $lefter(%pct $+ 8% $+ 14/15 $+ %votos $+ v,9)
+    %s = 00,14 $+ $left(%s,%p) $+ 00,01 $+ $mid(%s,$calc(%p + 1))
+    msgl 1,15 $+ $center(%x,3) $+ %s
+    inc %x
+    %t = $line(@enquete,%x)
+  }
+  window -c @enquete
+}

@@ -1,0 +1,205 @@
+;; ------------------------------------------------------------------------------------------- Aliases Auxiliares
+
+alias -l gt return $gettok($1-,$2,59)
+alias -l sw sockwrite -nt $sockname $1-
+alias -l futs.msg msg #cdzforever 3,3 8,8 0,3 $1- 8,8 3,3 
+
+;; ----------------------------------------------------------------------------------------------------- Comandos
+
+alias com_chan_!copa com_chan_!jogos
+alias com_chan_!jogos {
+  if ($chan != #cdzforever) return
+  flood.control 1 20 !jogos
+  futs.jogos
+}
+alias com_chan_!tabela {
+  if ($chan != #cdzforever) return
+  flood.control 1 20 !tabela
+  futs.tabela
+}
+alias com_chan_!futs.off { op.check @ | futs.central.stop }
+alias com_chan_!futs.on { op.check @ | futs.central.init }
+alias com_chan_!futs.narracao {
+  op.check !
+  if ($1 = off) {
+    if ($hget(futs.narracao)) hfree futs.narracao
+    .timer.futs.narracao off
+    noticen Narrador 4terminado15.
+  }
+  elseif (!$3) {
+    noticen Parâmetro 0Faltando15! Uso: 8!futs.narracao <id-jogo> <time> <time>
+  }
+  else {
+    futs.narracao futebol $1-
+    noticen Narrador 9iniciado15.
+  }
+}
+
+;; ------------------------------------------------------------------------------------------- Aliases Principais
+;;
+;; futs {
+;;     .jogos()                         mostra os jogos da rodada no canal #cdzforever
+;;           .callback.read($rec)       callback para tratar o retorno do site_get_contents
+;;           .callback.close($rec)      callback para tratar o final do site_get_contents
+;;     .central                         puxa o resultado dos jogos em tempo-real
+;;             .init()                  seta o timer pra buscar os resultados de tempos em tempos
+;;             .stop()                  finaliza o acompanhamento dos jogos da rodada no brasileirao
+;;             .refresh()               busca os dados
+;;             .callback($rec)          trata do recebimento dos dados acima
+;;     .timers                          responsavel por setar os timers para tudo funcionar sozinho :)
+;;            .update()                 puxa os jogos do dia, e seta os timers
+;;            .callback($rec)           trata o retorno do site_get_contents :)
+;;     .narracao($jid,$timea,$timeb)    inicia a narracao do jogo $jid entre o $timea e o $timeb
+;;              .callback($rec)         trata o recebimento dos dados do tempo-real da globo
+;;     .tabela()                        mostra a tabela do campeonato brasileiro
+;;           .callback.read($rec)       callback para tratar o retorno do site_get_contents
+;;
+;; --------------------------------------------------------------------------------------------------- FUTS.JOGOS
+;; Puxa os dados junto ao globoesporte.com, e lista os jogos que vão acontecer hoje, caso tenha algum 
+;; jogo marcado pra data :)
+;; --------------------------------------------------------------------------------------------------------------
+
+alias futs.jogos {
+  if (%futs.jogos.texto) halt
+  set -u10 %futs.jogos.texto
+  site_get_contents $+(http://cdzforever.net/saintseiya_handlers/wcupdates.php?jogos&dia=,$date(dd-mm-yyyy)) futs.jogos.callback.read futs.jogos.callback.close
+}
+alias futs.jogos.callback.read {
+  tokenize 59 $1-
+  if ($9 != $null) {
+    if ($len(%futs.jogos.texto) > 350) set -k %futs.jogos.texto2 %futs.jogos.texto2 12,8 $2 $+ $iif($1 != não iniciada,0/3 $+ $1) 8,3 $6 $iif($1 != não iniciada,12 $+ $8) 0x8 $iif($1 != não iniciada,12 $+ $9 $+ 8) $7
+    else set -k %futs.jogos.texto %futs.jogos.texto 12,8 $2 $+ $iif($1 != não iniciada,0/3 $+ $1) 8,3 $6 $iif($1 != não iniciada,12 $+ $8) 0x8 $iif($1 != não iniciada,12 $+ $9 $+ 8) $7
+  }
+}
+alias futs.jogos.callback.close {
+  if (%futs.jogos.texto) {
+    futs.msg Futebol082011 %futs.jogos.texto
+    if (%futs.jogos.texto2) futs.msg Futebol082011 %futs.jogos.texto2
+    unset %futs.jogos.texto %futs.jogos.texto2
+  }
+  else futs.msg Futebol082011 12,8 Nenhum 3jogo marcado para hoje! 0,3
+}
+
+;; ------------------------------------------------------------------------------------------------- FUTS.CENTRAL
+;; Puxa os dados do tempo-real da globo e informa no canal, a cada gol que sair.
+;; O futs.timer ativa esse script automaticamente, mas ele pode ser ativado através do comando !futs.on 
+;; executado por um operador no canal
+;; --------------------------------------------------------------------------------------------------------------
+
+alias futs.central.init {
+  .timer.futs.central 0 20 futs.central.refresh
+  if ($hget(futs.central)) hfree futs.central
+  futs.msg Acompanhamento dos jogos do dia 0ativado0!
+  ;futs.tabela.load
+}
+alias futs.central.stop {
+  .timer.futs.central off
+  if ($timer(.futs.narracao)) .timer.futs.narracao off
+  futs.msg Acompanhamento dos jogos do dia 0terminado0!
+}
+alias futs.central.refresh {
+  site_get_contents http://cdzforever.net/saintseiya_handlers/wcupdates.php?central futs.central.callback
+}
+alias futs.central.callback {
+  var %a = $1-
+  tokenize 59 $1-
+  if ($7 != $null) {
+    if ($hget(futs.central,$1) != %a) {
+      var %j = $v1
+      if (%j) {
+        if ($8 == Encerrada) {
+          ;msg #cdzforever 0,3 12,8 Jogo Encerrado! 0,3 Placar:08 $3 12 $+ $4 0x12 $gettok($7,1,32) 08 $+ $6 0,8 0,3 
+        }
+        elseif ($calc($7 + $4) > $calc($gt(%j,7) + $gt(%j,4))) {
+          var %time = $iif($4 > $gt(%j,4),$3,$6),%abr = $iif($4 > $gt(%j,4),$2,$5),%abr2 = $iif($4 > $gt(%j,4),$5,$2)
+          if (%abr == GRE) msg #cdzforever 0,3 12,8 Merda de gol... 0,3 Das bicha do08 %time $+ 0... Placar:08 $3 12 $+ $4 0x12 $gettok($7,1,32) 08 $+ $6 0,8 0,3 
+          elseif (%abr2 == GRE) msg #cdzforever 0,4 4,0 GoOooOooOOOOoOOOoOL! 0,4 Do08 %time $+ 0! Placar:08 $3 00 $+ $4 15x00 $gettok($7,1,32) 08 $+ $6 0,0 0,4 
+          else msg #cdzforever 0,3 12,8 GoOooOooOOOOoOOOoOL! 0,3 Do08 %time $+ 0! Placar:08 $3 12 $+ $4 0x12 $gettok($7,1,32) 08 $+ $6 0,8 0,3 
+        }
+      }
+      hadd -m futs.central $1 %a
+    }
+  }
+}
+
+;; -------------------------------------------------------------------------------------------------- FUTS.TIMERS
+;; Verifica junto a globo se tem algum jogo no dia de hoje caso tenha, seta os timers pra iniciarem o 
+;; futs.central na hora que começam os os jogos, e terminar um pouco depois que termina os jogos
+;; --------------------------------------------------------------------------------------------------------------
+
+on *:start:{
+  .timer.futs.update -o 09:00 0 86400 futs.timers.update
+}
+on *:connect:futs.timers.update
+alias futs.timers.update {
+  site_get_contents http://cdzforever.net/saintseiya_handlers/wcupdates.php?timers futs.timers.callback
+}
+alias futs.timers.callback {
+  tokenize 59 $1
+  if ($2) {
+    echo -s FUTS3>>UPDATE3>>Rodada encontrada. Início: $time($1) $+ , Fim: $time($2)
+    if ($1 > $ctime) timer.futs.central.start $time($calc($1 - 4*60*60)) 1 1 futs.central.init
+    elseif ($2 < $ctime) futs.central.init
+    if ($2 > $ctime) timer.futs.central.end $time($calc($2 - 4*60*60)) 1 1 futs.central.stop
+  }
+}
+
+;; ------------------------------------------------------------------------------------------------ FUTS.NARRACAO
+;; Serve pra narrar em tempo-real um determinado jogo... pega os dados da globo também
+;; --------------------------------------------------------------------------------------------------------------
+
+alias futs.narracao {
+  if ($1) {
+    if ($hget(futs.narracao)) hfree futs.narracao
+    hadd -m futs.narracao esporte $1
+    hadd futs.narracao jogo $2
+    hadd futs.narracao id 0
+    hadd futs.narracao timecasa $3
+    hadd futs.narracao timevisitante $4
+    .timer.futs.narracao 0 15 futs.narracao
+  }
+  if ($hget(futs.narracao)) {
+    site_get_contents http://cdzforever.net/saintseiya_handlers/wcupdates.php?esporte= $+ $hget(futs.narracao,esporte) $+ &narracao= $+ $hget(futs.narracao,jogo) futs.narracao.callback
+  }
+}
+alias futs.narracao.callback {
+  tokenize 59 $1-
+  if ($2 != $null) {
+    if ($1 > $hget(futs.narracao,id) && $hget(futs.narracao,id) > $calc($hget(futs.narracao,lid) - 3)) {
+      var %id = $hget(futs.central,$hfind(futs.central,$+(*;,$hget(futs.narracao,timecasa),;*;,$hget(futs.narracao,timevisitante),;*),1,w).data)
+      futs.msg 8 $+ $hget(futs.narracao,timecasa) $+ 09 $+ $iif(%id,$gt(%id,4)) $+ 0x09 $+ $iif(%id,$gettok($gt(%id,7),1,32)) $+ 8 $+ $hget(futs.narracao,timevisitante) 12,8 $2 $+ 3/12 $+ $3 $+ ' 0,3 $4-
+      hadd futs.narracao id $1
+    }
+  }
+  elseif ($gettok($1,1,32) == lid) {
+    hadd futs.narracao lid $gettok($1,2,32)
+    if (!$hget(futs.narracao,id)) hadd futs.narracao id $gettok($1,2,32)
+  }
+}
+
+
+;; -------------------------------------------------------------------------------------------------- FUTS.TABELA
+;; Puxa a tabela atualizada do campeonato, e faz algumas coisas em cima dela
+;; --------------------------------------------------------------------------------------------------------------
+
+alias com_chan_!classificacao com_chan_!tabela
+alias com_chan_!classificação com_chan_!tabela
+alias com_chan_!classificaçao com_chan_!tabela
+alias com_chan_!classificacão com_chan_!tabela
+alias futs.tabela {
+  hadd -m futs.tabela tabela 
+  site_get_contents  futs.tabela.callback
+}
+alias futs.tabela.callback {
+  var %i = 1,%t,%m = 0,8 0,3
+  while (%i <= $numtok($1-,$asc(;))) {
+    %t = $gettok($1-,%i,$asc(;))
+    var %pos = $gettok(%t,1,$asc(@))
+    ;var %c = $iif(%pos isnum 1-4,0 $+ $chr(44) $+ 3,$iif(%pos isnum 17-20,0 $+ $chr(44) $+ 4,3 $+ $chr(44) $+ 8))
+    var %c = 12,8
+    %m = %m %c %pos $+ º 0,3 $gettok(%t,4,$asc(@))
+    if (%i == 10) { futs.msg Brasileirão082011  %m | var %m }
+    inc %i
+  }
+  futs.msg Brasileirão082011  %m
+}

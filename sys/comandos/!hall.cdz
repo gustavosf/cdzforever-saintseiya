@@ -1,0 +1,22 @@
+on *:chat:*:{
+  if ($strip($1) = !hall) {
+    reforma sega
+    if ($2) {
+      if ($dados($2)) {
+        msgtopo
+        msgt 0SaintSeiya 14::0 Conquistas
+        msgt 14"8 $+ $2 $+ 14"
+        msgdiv
+        var %x = $ini($dados($2),trofeus,0)
+        while %x {
+          var %t = $dados($2,trofeus,$ini($dados($2),trofeus,%x))
+          msgt $gettok(%t,1,188)
+          msgt Em $gettok(%t,2,188)
+        }
+        msgbase
+      }
+    }
+  }
+}
+;on *:join:#cdzforever:if ($nick = julian_solo) .ignore -c $address($nick,2)
+;on *:nick:if ($newnick = julian_solo) .ignore -c $address($nick,2)

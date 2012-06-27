@@ -1,0 +1,83 @@
+on *:text:*:*: {
+  if !luta* iswm $strip($1) {
+    tokenize 32 $strip($1-) | var %tipo = $mid($1,6-)
+    if $istok(F M D E WO,%tipo,32) {
+
+      ;; ve se o cara eh atualizador
+      op.check +
+      ;; ve se jah existe uma atualizacao rolando
+      if $hget(atualiza,status) { .notice $nick 1,1 14,14 15,1 Já está havendo uma atualização!! 14,14 1,1  | halt }
+      ;; ve se faltam parametros no comando
+      if !$4 { .notice $nick 1,1 14,14 15,1 Parâmetro 0Faltando15. Sintaxe:9 $1 $iif(%tipo = E,<Lutador1> <Lutador2>,<Vencedor> <Perdedor>) <narrador> 0,14 0,1  | halt } 
+      ;; ve se os nicks citados estao cadastrados
+      var %x = 1,%l = $replace($2-3,$chr(44),$chr(32)) $4,%nc
+      while %x <= $numtok(%l,32) { if !$dados($gettok(%l,%x,32),nick) { %nc = $addtok(%nc," $+ $gettok(%l,%x,32) $+ ",44) } | inc %x }
+      if %nc {
+        if $numtok(%nc,44) = 1 { .notice $nick 1,1 14,14 15,1 O seguinte usuário não está 0cadastrado 15no bot:08 %nc 14,14 1,1  }
+        else { .notice $nick 1,1 14,14 15,1 Os seguintes usuários não estão 0cadastrados 15no bot:8 $replace(%nc,",14"08,$chr(44),15 $+ $chr(44) 08) 14,14 1,1  }
+        halt
+      }
+
+      ;; caso tudo esteja ok, prossegue
+
+      ;; Calculo do bônus
+      var %dif = $calc($numtok($3,44) - $numtok($2,44))
+      if %dif > 0 {
+        var %bonus = $calc(%dif * 100),%bonusd = $calc(%dif * 200)
+        if %tipo = E { var %bns = $int($calc(200 / %dif)),%bnsd = $int($calc(300 / %dif)) }
+        else { var %bns = $int($calc(100 / (%dif * 2))),%bnsd = $int($calc(200 / (%dif * 2))) }
+      }
+      if %dif = 0 {
+        %dif = $calc((($numtok($3,44) + $numtok($2,44)) - 2) / 2)
+        var %bonus = $calc(%dif * 100),%bonusd = $calc(%dif * 200)
+        if %tipo = E { var %bns = $calc(%dif * 100),%bnsd= $calc(%dif * 200) }
+        else { var %bns = $calc(%dif * 50),%bnsd = $calc(%dif * 100) }
+      }
+      if %dif < 0 {
+        %dif = $abs(%dif)
+        var %bonus = $abs($calc(%dif * 50)),%bonusd = $abs($calc(%dif * 100))
+        if %tipo = E { var %bns = $abs($calc(%dif * 100)),%bnsd = $abs($calc(%dif * 200)) }
+        else { var %bns = $abs($calc(%dif * 25)),%bnsd = $abs($calc(%dif * 50)) }
+      }
+
+      hadd -m atualiza status 1
+      hadd atualiza tipo $upper(%tipo)
+      var %x = 1,%n | while %x <= $numtok($2,44) { 
+        %n = $gettok($2,%x,44)
+        hadd atualiza p1 $hget(atualiza,p1) $+ , $+ $dados(%n,nick)
+        hadd atualiza p1.arm $hget(atualiza,p1.arm) $+ , $+ $replace($dados(%n,arm.on),sim,1,nao,0)
+        hadd atualiza p1.cosmo $hget(atualiza,p1.cosmo) $+ , $+ $calc($dados(%n,cosmo) + $replace($hget(atualiza,tipo),D,500,M,400,F,300,E,250,WO,150) + %bonus)
+        hadd atualiza p1.dinheiro $hget(atualiza,p1.dinheiro) $+ , $+ $calc($dados(%n,dinheiro) + $replace($hget(atualiza,tipo),D,1000,M,800,F,400,E,350,WO,300) + %bonusd)
+        hadd atualiza p1.stamina $hget(atualiza,p1.stamina) $+ , $+ $calc($dados(%n,stamina) - $replace($hget(atualiza,tipo),D,4,M,3,F,2,E,2,WO,0))
+        inc %x
+      }
+      var %x = 1 | while %x <= $numtok($3,44) { 
+        %n = $gettok($3,%x,44)
+        hadd atualiza p2 $hget(atualiza,p2) $+ , $+ $dados(%n,nick)
+        hadd atualiza p2.arm $hget(atualiza,p2.arm) $+ , $+ $replace($dados(%n,arm.on),sim,1,nao,0)
+        hadd atualiza p2.cosmo $hget(atualiza,p2.cosmo) $+ , $+ $calc($dados(%n,cosmo) + $replace($hget(atualiza,tipo),D,400,M,300,F,200,E,250,WO,0) + %bns)
+        hadd atualiza p2.dinheiro $hget(atualiza,p2.dinheiro) $+ , $+ $calc($dados(%n,dinheiro) + $replace($hget(atualiza,tipo),D,800,M,600,F,200,E,350,WO,0) + %bnsd)
+        hadd atualiza p2.stamina $hget(atualiza,p2.stamina) $+ , $+ $calc($dados(%n,stamina) - $replace($hget(atualiza,tipo),D,5,M,4,F,3,E,2,WO,0))
+        inc %x
+      }
+      hadd atualiza n $dados($4,nick)
+      hadd atualiza n.dinheiro $calc($dados($4,dinheiro) + $replace($hget(atualiza,tipo),D,2000,M,1000,F,500,E,2000,WO,350) + (100 * ($numtok($2,44) + $numtok($3,44) - 2)))
+      hadd atualiza atu $nick
+
+      if %tipo = E { var %tipo2 = Empate } | if %tipo = F { var %tipo2 = Fácil }
+      if %tipo = D { var %tipo2 = Difícil } | if %tipo = M { var %tipo2 = Médio }
+
+      .msg #CdzForever 1,1|14,14|9,1 Atualização 15de luta0 $numtok($2,44) $+ 15x00 $+ $numtok($3,44) 15 $+ $iif(%tipo == WO,0WO,nível00 %tipo2) $iif($chan ison #meikai #tenkai #sekai #kaikai,15no mundo11 $remove($chan,$chr(35))) 15entre: 14,14|1,1|
+      var %x = 1 | while %x <= $numtok($2,44) { .msg #CdzForever 1,1|14,14|9,1 $gettok($hget(atualiza,p1),%x,44) 15 $+ $iif(%tipo = E,empatou,venceu) $+ , e ficou com0 $div($gettok($hget(atualiza,p1.cosmo),%x,44)) 15de cosmo $iif(%bonus,14+08 $+ %bonus) e0 $+($,$div($gettok($hget(atualiza,p1.dinheiro),%x,44))) 15de Dinheiro $iif(%bonusd,14+08 $+ %bonusd) 14,14|1,1| | inc %x }
+      var %x = 1 | while %x <= $numtok($3,44) { .msg #CdzForever 1,1|14,14|9,1 $gettok($hget(atualiza,p2),%x,44) 15 $+ $iif(%tipo = E,empatou,perdeu) $+ , e ficou com0 $div($gettok($hget(atualiza,p2.cosmo),%x,44)) 15de cosmo $iif(%bns,14+08 $+ %bns) e0 $+($,$div($gettok($hget(atualiza,p2.dinheiro),%x,44))) 15de Dinheiro $iif(%bnsd,14+08 $+ %bnsd) 14,14|1,1| | inc %x }
+      .msg #CdzForever 1,1|14,14|9,1 $hget(atualiza,n) 15narrou, e ficou com0 $+($,$div($hget(atualiza,n.dinheiro))) 15de Dinheiro. 14,14|1,1|
+      .msg #CdzForever 1,1|14,14|9,1 $nick $+ 15, para completar a atualização digite 0!Confirmar 14,14|1,1|
+    }
+  }
+  if (@cancelar == $strip($1)) {
+    op.check +
+    if !$hget(atualiza,status) { .notice $nick 1,1 14,14 15,1 Não está havendo lutas!! 14,14 1,1  | halt }
+    hfree atualiza
+    .msg #CdzForever 1,1|14,14|9,1 Atualização15 da Luta foi0 Cancelada!! 14,14|1,1|
+  }
+}

@@ -1,0 +1,87 @@
+alias teste {
+  var %s1 = 3e6b263  4 17 80
+  var %s2 = 17  9 G`ZD9   2 2b 7X 3 /r90
+  var %s3 = WjN}|M(6
+
+  var %s11 = $regsubex(%s1,/[^\d]/g,) 
+  var %s12 = $count(%s1,$chr(160))
+  var %s21 = $regsubex(%s2,/[^\d]/g,)
+  var %s22 = $count(%s2,$chr(160))
+
+  var %s1r = $calc(%s11 / %s12)
+  var %s2r = $calc(%s21 / %s22)
+
+  var %cc = $regsubex($base(%s1r,10,16,8),/([0-9A-F]{2})/g,\1 $+ $chr(32))
+  %cc = %cc $regsubex($base(%s2r,10,16,8),/([0-9A-F]{2})/g,\1 $+ $chr(32))
+
+  var %c = $regsubex($base(%s1r,10,16,8),/([0-9A-F]{2})/g,$chr($base(\1,16,10)))
+  %c = %c $regsubex($base(%s2r,10,16,8),/([0-9A-F]{2})/g,$chr($base(\1,16,10)))
+
+  echo -a s1  :: %s1
+  echo -a s11 :: %s11
+  echo -a s12 :: %s12
+  echo -a sr  :: %s1r
+  echo -a --------
+  echo -a s2  :: %s2
+  echo -a s21 :: %s21
+  echo -a s22 :: %s22
+  echo -a sr  :: %s2r
+  echo -a --------
+  echo -a code :: %c $+ %s3
+  echo -a      :: %cc
+  echo -a --------
+  echo -a md5  :: $md5(%c $+ %s3)
+  echo -a fin  :: $regsubex($md5(%c $+ %s3),/([0-9a-f]{2})/g,$chr($base(\1,16,10)))
+
+}
+
+alias -l ws { echo -a WS13>>1 $+ $upper($1) $+ 13>>1 $+ $2- }
+alias -l sw { ws WRITE $1- | sockwrite -nt $sockname $1- }
+alias -l h+ { hadd -m $sockname $1- }
+alias -l h? { return $hget($sockname,$1-) }
+
+on *:socklisten:ws:{
+  var %x = $+(ws.ident.,$r(1,9999999))
+  while ($sock(%x)) %x = $+(ws.ident.,$r(1,9999999))
+  ws accept %x
+  sockaccept %x
+}
+
+on *:sockread:ws.ident.*:{
+  :nextread
+  sockread -f %a
+  tokenize 32 %a
+  ws read $1-
+
+  if ($1 == GET) h+ resource $2
+  elseif ($1 == Host:) h+ host $2
+  elseif ($1 == Origin:) h+ origin $2
+  elseif ($1 == Sec-WebSocket-Key1:) h+ sec1 $2-
+  elseif ($1 == Sec-WebSocket-Key2:) h+ sec2 $2-
+  elseif ($sockbr == 0) {
+    sw HTTP/1.1 101 Web Socket Protocol Handshake
+    sw Upgrade: WebSocket
+    sw Connection: Upgrade
+    sw WebSocket-Origin: $h?(origin)
+    sw WebSocket-Location: ws:// $+ $h?(host) $+ $h?(resource)
+    sw 
+    if ($h?(sec1)) {
+      var %s1 = $calc($regsubex($h?(sec1),/[^\d]/g,) / $len($regsubex($h?(sec1),/[^ ]/g,)))
+      var %s2 = $calc($regsubex($h?(sec2),/[^\d]/g,) / $len($regsubex($h?(sec2),/[^ ]/g,)))
+      var %s = $+(%s1,%s2,$1-)
+      sockwrite -nt $sockname $md5(%s)
+      ws WRITE $md5(%s)
+    }
+    sockrename $sockname $+(ws.active.,$gettok($sockname,3,46))
+    return
+  }
+  goto nextread
+  return 
+}
+
+on *:sockclose:ws.*:{
+  ws close $sockname
+}
+on *:sockopen:ws.*:{
+  ws open %sockname
+}

@@ -1,0 +1,138 @@
+alias com_chat_!memo {
+  id.check =
+  if (!$1) {
+    msgtopo 
+    msgt 0SaintSeiya 14::0 Memoserv
+    msgt Suas mensagens privadas
+    msgdiv
+    msgt 14-15 Comandos 14-
+    msgl 8!0Memo 
+    msgl    14- 08List                0Lista 9todos 15os memos
+    msgl    14- 08List new            0Lista 15os memos 9novos
+    msgl    14- 08List old            0Lista 15os memos 9antigos
+    msgl    14- 08Send <0nick8> <0msg8>   0Envia 15um memo pra outro usuario
+    msgl    14- 08 Del <0*8/0num8>        0Deleta 9um15, ou 9todos 15os memos
+    msgl    14- 08Read <0num8>          0Lê 15um memo
+    msgbase
+  }
+  if ($1 = list) {
+    if ($2 = old) var %rest = old
+    if ($2 = new) var %rest = new
+    if (!$2) var %rest = *
+    msgtopo
+    msgt 0SaintSeiya 14:: 0Memoserv
+    msgt Suas mensagens privadas
+    var %x = 1,%memo = $dados($nick,memo,$ini($dados($nick),memo,%x))
+    var %spc = $len($ini($dados($nick),memo,$ini($dados($nick),memo,0)))
+    var %msg,%new,%old
+    if (%memo) msgdiv
+    while %memo {
+      if (%rest iswm $gettok(%memo,2,188)) {
+        %msg = $remove($strip($replace($gettok(%memo,6-,188),&k,,&u,)),)
+        %msg = $iif($len(%msg) > 50,$left(%msg,47) $+ ...,%msg)
+        msgl 1,11 $+ $spc($gettok(%memo,1,188),%spc) $+ $gettok(%memo,1,188) $+ 00,01 %msg
+        msgl 1,11 $+ $spc(*,%spc) $+ $iif($gettok(%memo,2,188) = New,*, ) $+ 15,01 De:00 $gettok(%memo,3,188) 15em09 $gettok(%memo,4,188) 15ás09 $gettok(%memo,5,188)
+        if ($gettok(%memo,2,188) = New) inc %new
+        else inc %old
+        msgl
+      }
+      inc %x
+      %memo = $dados($nick,memo,$ini($dados($nick),memo,%x))
+    }
+    msgdiv
+    dec %x
+    if (%x) msgt Você possui08 %x 15mensagens na sua 0caixa de entrada15.
+    else msgt Você não tem 0nenhum 15memo.
+    if (%new) msgt Você possui09 %new 15mensagens 0novas15.
+    if (%x) { msgt | msgt Para 0ler 15uma mensagem, digite 11!Memo read <0numero11> }
+    msgbase 
+  }
+  if ($1 = send) {
+    if ($timer(.msend. $+ $nick)) msgehalt Você deve esperar08 10 segundos 15antes de enviar outro memo
+    if (!$3) msgehalt Parâmetro 8faltando15.¼ ¼Use 11!Memo Send <0mensagem11>
+    if (!$dados($2,nick)) msgehalt O usuário 14"09 $+ $2 $+ 14"15 não está 0cadastrado 15no bot.
+
+    .timer.msend. $+ $nick 1 10 halt
+    memosend $2 $nick $4-
+    msgtopo 
+    msgl 09Memoserv15: Mensagem enviada para08 $2 $+ 15. 
+    msgbase 
+  }
+  if ($1 = del) {
+    if (!$2) msgehalt Parâmetro 8faltando15.¼ ¼Use 11!Memo Del <0número11>
+    if ($2 = * || $2 = all) {
+      remini $dados($nick) $nick memonew
+      remini $dados($nick) memo
+      msgtopo | msgl 9MemoServ15: 08Todas 15as suas Memos foram 0deletadas15. | msgbase 
+    }
+    else {
+      var %memo = $dados($nick,memo,$2)
+      if (%memo) {
+        if ($gettok(%memo,2,188) = new) writeini $dados($nick) $nick memonew $calc($dados($nick,memonew) - 1)
+        remini $dados($nick) memo $2
+        msgtopo | msgl 9MemoServ15: Memo número08 $2 15foi deletado. | msgbase 
+      }
+      else msge Não existe um memo com o número08 $2 $+ 15!
+    }
+  }
+  if ($1 = read) {
+    var %memo = $dados($nick,memo,$2)
+    if %memo {
+      if ($gettok(%memo,2,188) = new) { 
+        writeini $dados($nick) memo $2 $2 $+ ¼Old¼ $+ $gettok(%memo,3-,188)
+        writeini $dados($nick) $nick memonew $calc($dados($nick,memonew) - 1)
+      }
+      msgtopo
+      msgt 0SaintSeiya 15::0 Memoserv
+      msgt Leitura de Mensagem
+      msgdiv
+      xmsgt $replace($gettok(%memo,6-,188),&k,,&u,)
+      msgdiv
+      msgt Enviada por00 $gettok(%memo,3,188) 15em09 $gettok(%memo,4,188) 15ás09 $gettok(%memo,5,188)
+      msgbase
+    }
+    else { 
+      msgtopo
+      if (!$2) msgl 9MemoServ14: 15Você precisa indicar o número de um memo.
+      else msgl 9MemoServ14: 15Memo de número00 $2 15não encontrado!
+      msgbase
+    }
+  }
+}
+
+alias memosend {
+  ;memosend <nick/@/*> de mensagem
+  if $1 = @ { }
+  if $1 = * { }
+  elseif ($1 != *) && ($1 != @) {
+    var %memon = $ini($dados($1),memo,$ini($dados($1),memo,0))
+    inc %memon
+    var %memo = $+(%memon,¼,New,¼,$2,¼,$date,¼,$time,¼,$replace($3-,,&k,,&u))
+    writeini $dados($1) memo %memon %memo
+    writeini $dados($1) $1 memonew $calc($dados($nick,memonew) + 1)
+    if ($1 ison #cdzforever) noticeto $1 Você recebeu uma 0mensagem privada15 de09 $2 $+ 15. Para 0lê-la15, digite no chat:11 !Memo Read %memon
+  }
+}
+on *:join:#cdzforever:{
+  set -u3 %join.ao.msm.tempo $calc(%join.ao.msm.tempo + 1)
+  if (%join.ao.msm.tempo <= 3) || (!%join.ao.msm.tempo) {
+    check.memonew $nick
+    if ($dados($nick,nick)) {
+      .notice $nick $c1 Bem vindo de volta08 $nick $+ 15. $iif($top($nick),Você é o09 $top($nick) $+ 14°15 colocado no 0top15 $+ $chr(44) com,Você tem) 09 $+ $div($dados($nick,cosmo)) 15de cosmo. $iif($dados($nick,memonew),Você possui08 $dados($nick,memonew) $iif($dados($nick,memonew) > 1,15novas 0mensagens privadas15,15nova 0mensagem privada15) $+ $chr(44) para vê-las $+ $chr(44) digite 09!Memo List 15no chat do bot) $c2
+      ;var %x = $read(sys/enquetes.txt,s,@ENQV t8l)
+      ;if (!$istok(%x,$nick,32)) msgto $nick Olá08 $nick $+ 15! 0Estamos pensando em mudar de rede15, e queríamos a sua opinião! Leia a 9notícia 165 15(14!new 16515) e opine através dos 11comentários 15(14!comentar 165 <comentário>15) ou 11vote na enquete 15(14!Enquete t8l15)
+    }
+  }
+  if ($nick == sobis) msgto #cdzforever Pula que é 0gol 15do 8SÓBIS15! 0Só pode ser o 8SÓBIS15!
+}
+alias check.memonew {
+  if $dados($nick,nick) {
+    var %x = $ini($dados($nick),memo,0),%m,%new = 0
+    while %x {
+      %m = $dados($nick,memo,$ini($dados($nick),memo,%x))
+      if ($gettok(%m,2,188) = new) inc %new
+      dec %x
+    }
+    writeini $dados($nick) $nick memonew %new
+  }
+}

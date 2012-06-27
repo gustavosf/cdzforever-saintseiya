@@ -1,0 +1,132 @@
+alias -l arenas return #cdzmakai
+alias -l msge { notice $nick $c1 $1- $c2 | halt }
+
+alias -l luta {
+  if ($2) return $hget($+(lutas.,$1),$2)
+  return $hget($+(lutas.,$chan),$1)
+}
+alias -l luta+ hadd -m $+(lutas.,$chan) $1-
+
+alias cb.phoenixdown {
+  user.vigor.set 100
+  msgtopo
+  msgt Você reviveu e recuperou 100% do seu vigor!
+  msgbase
+}
+
+alias listItens {
+  var %nick = $1
+  var %itens = $sorttok($lower($replace($dados(%nick,itens),$+($chr(44),$chr(32)),$chr(44))),44,a)
+  var %it,%q,%final
+  var %x = 1,%i
+  while (%itens) {
+    %it = $gettok(%itens,1,44)
+    %q = $matchtok(%itens,%it,0,44)
+    %i = $iif($loja(%it,nome),$loja(%it,nome),%it)
+    %final = $addtok(%final,%i $+ $iif(%q > 1,$+([14,%q,x0])),44)
+    %itens = $remtok(%itens,%it,0,44)
+    if (%x > 15) unset %itens
+  }
+  return %final
+}
+alias -l listGolpes {
+  var %a = $remove($dados($1,armadura),$chr(32))
+  if (%a != nenhuma) {
+    var %golpes = $readini(armaduras.ini,%a,golpes),%aura = $aura($1,1)
+    var %i = 1,%pode,%naopode
+    while (%i <= $numtok(%golpes,44)) {
+      var %g = $gettok(%golpes,%i,44)
+      if ($readini(golpes.ini,$remove(%g,$chr(32)),necessario) <= %aura) {
+        %pode = $addtok(%pode,%g,44)
+      }
+      else %naopode = $addtok(%naopode,%g,44)
+      inc %i
+    }
+  }
+  return $+(%pode,;,%naopode)
+}
+
+
+alias com_chan_!fechaluta {
+  reforma sega
+  op.check @
+  ; if ($chan !isin $arenas) msge Canal 4inválido15. Este comando serve apenas para os 0canais de luta15!
+  luta+ status 0
+  msgto $chan Luta no canal8 # 0cancelada15!
+}
+
+alias com_chan_!narrar {
+  reforma xdvl
+  id.check
+
+  ;; verifica a validade do comando
+  ;if (!$istok($arenas,$chan,44)) msge Canal 4inválido14. Use apenas canais de luta 8oficiais
+  if (!$2) msge Parâmetro faltando! Uso: 9!narrar 15<9lutador14[,lutador,...]15> <9lutador14[,lutador,...]15>. Exemplo: 8!narrar Aurion,Alchemist sega
+  if ($luta(status)) msge 0Já existe uma luta corrente neste canal15! Luta:8 $luta(player1) 15vs8 $luta(player2) $+ 15, Narrador:9 $luta(narrador)
+
+  ;; verifica a validade dos participantes
+  var %players = $addtok($1,$2,44),%i = $numtok(%players,44)
+  var %player,%ecad,%eison,%evigor,%elutando
+  while (%i) {
+    %player = $gettok(%players,%i,44)
+    if (!$dados(%player,nick)) %ecad = $addtok(%ecad,%player,44)
+    elseif (!$dados(%player,stamina)) %evigor = $addtok(%evigor,%player,44)
+    if (%player !ison $chan) %eison = $addtok(%eison,%player,44)
+    if ($hfind(lutas,%player $+ .*,0,w)) %elutando = $addtok(%elutando,%player,44)
+    dec %i
+  }
+  if (%ecad) msge 00 $+ $nick $+ 15, $iif($numtok(%ecad,44) = 1,o usuário,os usuários) $+ 08 $replace(%ecad,$chr(44),15 $+ $chr(44) 08) 15não $iif($numtok(%ecad,44) = 1,está 0cadastrado,estão 0cadastrados) 15no bot!
+  if (%eison) msge 00 $+ $nick $+ 15, $iif($numtok(%eison,44) = 1,o usuário,os usuários) $+ 08 $replace(%eison,$chr(44),15 $+ $chr(44) 08) 15não $iif($numtok(%eison,44) = 1,está 0presente,estão 0presentes) 15no canal!
+  if (%evigor) msge 00 $+ $nick $+ 15, $iif($numtok(%evigor,44) = 1,o usuário,os usuários) $+ 08 $replace(%evigor,$chr(44),15 $+ $chr(44) 08) 15não $iif($numtok(%eison,44) = 1,possui,possuem) 0vigor 15suficiente para lutar!
+  if (%elutando) msge 00 $+ $nick $+ 15, $iif($numtok(%elutando,44) = 1,o usuário,os usuários) $+ 08 $replace(%elutando,$chr(44),15 $+ $chr(44) 08) 15já $iif($numtok(%eison,44) = 1,está,estão) 0lutando 15em outro canal!
+
+  ;luta+ status 1
+  luta+ player1 $1
+  luta+ player2 $2
+  luta+ narrador $nick
+
+  msgto # Iniciando o combate...
+
+  var %cores = 4;12;3;13;10;11;8;9;5;6;3
+  var %msg,%msgi,%c
+  while (%i < $numtok(%players,44)) {
+    inc %i
+    %c = $gettok(%cores,%i,59)
+    %player = $gettok(%players,%i,44)
+    hadd -m lutas $+(%player,.,$chan) 0
+    %msg =  $+ %c $+ $dados(%player,nick) 0,14 15,1 Cosmo:8 $div($dados(%player,cosmo))
+    %msg = %msg 15[09 $+ $dados(%player,stamina) $+ $chr(37) $+ 15]
+    %msg = %msg 14|15 Armadura:0 $dados(%player,armadura) $+ $iif($dados(%player,arm.on) = sim,14/8Invocada))
+    if ($dados(%player,armadura) != nenhuma) {
+      var %g = $listGolpes(%player)
+      %msg = %msg 14|15 Golpes:0 $replace(%g,;,$iif($numtok(%g,59) > 1,15 /14,))
+    }
+    %msgi = Itens:0 $listItens(%player)
+    if ($len(%msg %msgi) < 415) msgn %msg 14|15 %msgi
+    else {
+      msgn %msg
+      msgn  $+ %c $+ $dados(%player,nick) 0,14 15,1 %msgi
+    }
+
+    ; debug
+    %i = 1000
+  }
+  var %local = $read(sys/lists/locais.list)
+  ; while ($gettok(%local,1,59) != $chan) %local = $read(sys/locais.list)
+  luta+ local %local
+
+  .timer 1 1 iniciaLuta $chan
+
+
+}
+alias com_pvt_!golpe {
+  id.check
+  if ($hfind(lutas,$nick $+ .*,1,w) != $null) var %chan = $gettok($v1,2,44)
+  if (!%chan) msge Você não está 0lutando 15em nenhum canal!
+  msgn Lalalaalalall %chan <-!
+}
+alias -l iniciaLuta {
+  msgto $1 Luta8 $numtok($luta($1,player1),44) $+ 15x08 $+ $numtok($luta($1,player2),44) 15entre9 $luta($1,player1) 15e9 $luta($1,player2)    
+  msgto $1 Local:0 $capitalize($mid($1,5)) $+ 15,8 $gettok($luta($1,local),2,59) 15(14 $+ $gettok($luta($1,local),3,59) $+ 15)
+  msgto $1 08 $+ $luta($1,player1) $+ , $+ $luta($1,player2) 15ataquem no meu pvt. 097 minutos15!
+}

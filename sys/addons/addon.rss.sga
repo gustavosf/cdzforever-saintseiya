@@ -1,0 +1,60 @@
+on *:start:.timer.sys.rss -o 0 $calc(60*135) getrss
+
+;; ---------------------------------------------------------------------------------------- ALIAS PRINCIPAL
+
+alias getrss {
+  if ($me !ison #cdzforever) return
+  if ($line(@rss,0)) readrss
+  else {
+    var %x = rss. $+ $r(10000,99999)
+    sockopen %x cdzforever.net 80
+    sockmark %x 0
+  }
+}
+
+;; ---------------------------------------------------------------------------------------- COMANDOS
+
+alias com_all_!rss {
+  reforma sega
+  getrss
+}
+alias com_all_!rssflush {
+  reforma sega
+  window -c @rss
+  noticen Flush na cache de RSS ok!
+}
+
+;; ---------------------------------------------------------------------------------------- ALIASES AUXILIARES
+
+alias -l echowindow {
+  if (!$window($1)) window -h $1
+  aline $1 $2-
+}
+alias -l readrss {
+  var %r = $r(1,$line(@rss,0))
+  if (%r) {
+    var %rss = $line(@rss,%r)
+    dline @rss %r
+    var %msg = SaintSeiya14/9RSS 1,14 0,1 $gettok(%rss,1,188) 14->8 $gettok(%rss,2,188)
+    %msg = %msg 1,14 0,1 http://s.cdzforever.net/ $+ $iif($gettok(%rss,4,188),$v1,$gettok(%rss,3,188))
+    if ($gettok(%rss,4,188)) {
+      %msg = %msg 1,14 15,1
+      var %l = $calc(410 - $len(%msg))
+      %msg = %msg $left($gettok(%rss,3,188),%l) $+ $iif(%l < $len($gettok(%rss,3,188)),...)
+    }
+    msgto #cdzforever %msg
+  }
+}
+
+;; ---------------------------------------------------------------------------------------- EVENTOS
+on *:sockopen:rss.*:{
+  sockwrite -nt $sockname GET /saintseiya_handlers/rss.php?type=cdz HTTP/1.1
+  sockwrite -nt $sockname host: cdzforever.net
+  sockwrite -nt $sockname
+}
+on *:sockread:rss.*:{
+  sockread %a
+  if ($sock($sockname).mark && $numtok(%a,188) > 1) echowindow @rss %a
+  elseif (!%a) sockmark $sockname 1
+}
+on *:sockclose:rss.*:readrss

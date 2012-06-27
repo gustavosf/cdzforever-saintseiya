@@ -1,0 +1,42 @@
+alias -l sw sockwrite -nt $sockname $1-
+alias -l convert {
+  if ($2 == f) return $calc((($1 * 9) / 5) + 32) $+ °F
+  if ($2 == k) return $calc($1 + 273.15) $+ K
+  if ($2 == ra) return $calc($1 * 1.8 + 32 + 459.67) $+ °Ra
+  if ($2 == re) return $calc((4 / 5) * $1) $+ °Re
+  return $1 $+ °C
+}
+
+alias weather_callback {
+  if (<?xml* iswm $1-) {
+    noop $regex(city,$1-,/<city data="([^\/.]+)"\/>/g)
+    noop $regex(condition,$1-,/<condition data="([^\/.]+)"\/>/g)
+    noop $regex(day_of_week,$1-,/<day_of_week data="([^\/.]+)"\/>/g)
+    noop $regex(temp_c,$1-,/<temp_c data="([^\/.]+)"\/>/g)
+    noop $regex(low,$1-,/<low data="([^\/.]+)"\/>/g)
+    noop $regex(high,$1-,/<high data="([^\/.]+)"\/>/g)
+    noop $regex(humidity,$1-,/<humidity data="Umidade: ([^\/.]+)"\/>/g)
+    noop $regex(wind_condition,$1-,/<wind_condition data="Vento: (.+)"\/><\/current/g)
+    if ($regml(city,0)) {
+      var %grau = $gettok($sock($sockname).mark, 6, 32)
+      var %x = 1,%prev
+      while ($regml(low,%x)) {
+        if (%x < 4) %prev = %prev 0 $+ $replace($regml(day_of_week,%x),seg,Segunda,ter,Terça,qua,Quarta,qui,Quinta,sex,Sexta,sáb,Sábado,dom,Domingo) $+ 8(15 $+ $regml(condition,$calc(%x + 1)) $+ , 0MAX15:04 $+ $convert($regml(high,%x),%grau) $+ 15, 0MIN15:09 $+ $convert($regml(low,%x), %grau) $+ 8) 
+        inc %x
+      }
+      msgto #cdzforever 8!0Tempo 8(15 $+ $regml(city,1) $+ 8)09 $regml(condition,1) 8(00 $+ $convert($regml(temp_c,1), %grau) $+ 8)15, 0Umidade15:09 $regml(humidity,1) $+ 15,0 Vento15:09 $regml(wind_condition,1) 8* 0Previsão15: %prev
+    }
+    else msgto #cdzforever 8!0Tempo 8* 0Não há dados disponívels para esta cidade no momento
+    sockclose $sockname
+  }
+}
+
+alias com_chan_!tempo {
+  if ($chan != #cdzforever) return
+  if (!$regex($1-,/^(-(f|k|c|ra|re))?(.*)$/)) msgehalt 0Você precisa indicar uma 8cidade0. Uso: 09!Tempo <Cidade>
+
+  var %grau = $iif($regml(0) > 1, $regml(2), c)
+  var %cidade = $iif($regml(0) > 1, $regml(3), $regml(1))
+
+  site_get_contents $+(bhttp://www.google.com.br/ig/api?weather=,$replace(%cidade,$chr(32),+,ã,a,á,a,é,e,ê,e,ú,u,ç,c)) weather_callback 0 %grau
+}

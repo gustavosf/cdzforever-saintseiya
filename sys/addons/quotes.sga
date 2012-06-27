@@ -1,0 +1,61 @@
+;; ----------------------------------------------------------------------------
+;; Addon :: quote
+;; Puxa uma quote aleatória com menos de 350 caracteres do banco de dados de
+;; quote no site do cdzforever.
+;; É usada em combinação com o script getquote.php, na raíz do cdzforever.net
+;; ----------------------------------------------------------------------------
+;; Uso: /getquote
+;; ----------------------------------------------------------------------------
+
+alias quote.get site_get_contents $+(http://cdzforever.net/saintseiya_handlers/quote/getquote.php?qn=,$1) quote.callback.read
+
+;; ---------------------------------------------------------------------------- STARTUP
+
+on *:signal:system_ready:.timer.sys.quotes -o 0 $calc(60*47) quote.get
+
+;; ---------------------------------------------------------------------------- AUXILIARES
+
+alias -l sw         { if ($sock($sockname).status == active) sockwrite -nt $sockname $1- }
+alias -l rates.path { return sys/quote.rates.txt }
+alias -l quote      {
+  if ($isid) return $hget(sys.quote,$iif($1,$1,id))
+  else hadd -m sys.quote $1-
+}
+alias -l quote.show { 
+  var %rate = $iif($gettok($1-,2,9),14[ $+ $iif($v1 > 0,9+,4) $+ $v1 $+ 14])
+  msgto #cdzforever 9SaintSeiya0/8Quotes $+ 0/11 $+ $gettok($1-,1,9) %rate 0,14 0,1 $gettok($1-,3-,9) 
+}
+
+;; ---------------------------------------------------------------------------- CALLBACK
+
+alias quote.callback.read {
+  if ($1) {
+    hadd -mu600 sys.quote id $gettok($1-,1,9)
+    hadd sys.quote rate $gettok($1-,2,9)
+    quote.show $1-
+  }
+  elseif ($quote(caller)) {
+    noticeto $v1 Quote solicitada 4não 15foi encontrada no 0banco de dados15!
+    hdel sys.quote call. $+ $v1
+    hdel sys.quote caller
+  }
+}
+
+;; ---------------------------------------------------------------------------- COMANDO
+
+alias com_chan_!quote { 
+  if ($nick != xdvl) disabled Só usando o comando pra dar sux nas quotes ¬¬. O objetivo é mostrar as quotes boas, não ficar repetindo trocentas vezes as ruins no canal
+  if ($oplv($nick) < 2) && ($quote(call. $+ $nick)) { msgehalt Você só pode chamar 11uma 15quote a cada 0020 segundos 14:) haha! }
+  hadd -mu20 sys.quote call. $+ $nick 1
+  quote.get $1 | quote caller $nick 
+}
+alias com_chan_!euri com_aux_rate 1
+alias com_chan_!sux  com_aux_rate 0
+alias com_aux_rate {
+  if (!$quote(id)) msgehalt Você só pode votar até08 10 minutos 15depois da quote aparecer no canal.
+  if ($read($rates.path,s,$quote(id) $nick) != $null) msgehalt Você 4já votou 15nesta quote!
+  hinc sys.quote rate $iif($1,1,-1)
+  noticen Seu voto foi 0computado 14:) 11Obrigado15! Agora esta quote tem $iif($quote(rate) > 0,09,04) $+ $v1 15votos.
+  write $rates.path $quote(id) $nick $1
+  site_get_contents $+(http://cdzforever.net/saintseiya_handlers/quote/ratequote.php?id=,$quote(id),&rate=,$1)
+}

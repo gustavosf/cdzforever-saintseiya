@@ -1,0 +1,90 @@
+;; ----------------------------------------------------------------------------
+;; Comando :: chat :: !TopAtu [update] [lines]
+;; Rankeia os atualizadores do canal conforme as últimas [lines] lutas
+;; Valor default para lines é 800
+;; Usa como [com_aux_topatu] como auxiliar
+;; ----------------------------------------------------------------------------
+alias com_chat_!topatu {
+  op.check @ =
+  if ($1 == update || !$hget(sys.atutop,update) || ($hget(sys.atutop,update) < $calc($ctime - 60*60*24))) com_aux_topatu $2
+
+  msggtopo
+  msggt 0SaintSeiya 14::8 Top Atualizadores
+  msggdiv
+  msggl     0Nick              8Total                     9Último Mês                11Última Semana
+  msggdiv
+
+  var %t = $line(@atutop.g,0), %i = %t
+  var %max.g = $gettok($line(@atutop.g,$line(@atutop.g,0)),1,32)
+  var %max.m = $gettok($line(@atutop.m,$line(@atutop.m,0)),1,32)
+  var %max.s = $gettok($line(@atutop.s,$line(@atutop.s,0)),1,32)
+  var %g,%m,%s,%n,%x,%msg
+
+  while (%i && $calc(%t - %i) < 30) {
+    %n = $gettok($line(@atutop.g,%i),2,32)
+    %g = $gettok($fline(@atutop.g,* %n,1).text,1,32)
+    %m = $gettok($fline(@atutop.m,* %n,1).text,1,32)
+    %s = $gettok($fline(@atutop.s,* %n,1).text,1,32)
+
+    dec %i
+
+    %msg = $righter($calc(%t - %i) $+ º,3) 00 $+ $righter(%n,17)
+
+    %x = $lefter(  $+ $calc(%g + 0),25)
+    %msg = %msg 1,8 $+ $left(%x,$ceil($calc((25 / %max.g) * %g))) $+ 00,01 $+ $right(%x,$floor($calc(25 - (25 / %max.g) * %g)))
+    %x = $lefter(  $+ $calc(%m + 0),25)
+    %msg = %msg 1,09 $+ $left(%x,$ceil($calc((25 / %max.m) * %m))) $+ 00,01 $+ $right(%x,$floor($calc(25 - (25 / %max.m) * %m)))
+    %x = $lefter(  $+ $calc(%s + 0),25)
+    %msg = %msg 1,11 $+ $left(%x,$ceil($calc((25 / %max.s) * %s))) $+ 00,01 $+ $right(%x,$floor($calc(25 - (25 / %max.s) * %s)))
+
+    msggl %msg
+  }
+  if (%i) { msggt | msggt Outros08 %i 15atualizadores 11não 15entraram na estatística. }
+  msggdiv
+  msggt Última 0atualização 15em11 $date($hget(sys.atutop,update)) 15ás9 $time($hget(sys.atutop,update))
+  msggbase
+}
+
+;; ----------------------------------------------------------------------------
+;; Alias Auxiliar :: com_aux_topatu [lines]
+;; Puxa as últimas [lines=800] lutas e cria 3 windows com os atualizadores
+;; rankeados por semana, mês e ano
+;; ----------------------------------------------------------------------------
+alias com_aux_topatu {
+  if ($hget(atutop)) { .hfree atutop }
+  window -c @atutop | window -hs @atutop
+  window -c @atutop.g | window -hs @atutop.g
+  window -c @atutop.m | window -hs @atutop.m
+  window -c @atutop.s | window -hs @atutop.s
+
+  loadbuf $iif($1 isnum,$1,800) @atutop $lutas.path
+
+  var %regex = /Atualizada por (.*?) no dia ([0-9]{2}\/[0-9]{2}\/[0-9]{4})/g
+  var %i = $line(@atutop, 0), %l, %c
+
+  ;; puxa os dados dos atualizadores pra uma hash
+  while (%i && !%f) {
+    %l = $line(@atutop, %i)
+    .noop $regex(%l, %regex)
+    %c = $ctime - $ctime($regml(2))
+    if (%c isnum 0-604800) hinc -m atutop $+($regml(1),.s) 1
+    if (%c isnum 0-2592000) hinc -m atutop $+($regml(1),.m) 1
+    hinc -m atutop $+($regml(1),.g) 1
+    dec %i
+  }
+
+  ;; calcula o top atualizadores
+  clear @atutop
+  var %i = $hfind(atutop,*.g,0,w)
+  while (%i) {
+    %l = $gettok($hfind(atutop,*.g,%i,w),1,46)
+    aline @atutop.m $base($calc($hget(atutop,%l $+ .m) + 0),10,10,5) $gettok(%l,1,46)
+    aline @atutop.s $base($calc($hget(atutop,%l $+ .s) + 0),10,10,5) $gettok(%l,1,46)
+    aline @atutop.g $base($calc($hget(atutop,%l $+ .g) + 0),10,10,5) $gettok(%l,1,46)
+    dec %i
+  }
+
+  hfree atutop
+  window -c @atutop
+  hadd -m sys.atutop update $ctime  
+}

@@ -1,0 +1,18 @@
+#dcc_chat on
+on *:chat:*:{
+  if ($id?($nick)) && ($left($strip($1),1) !isin . @ !) && ($dados($nick,chat)) { msgall $nick $1- }
+}
+#dcc_chat end
+alias msgall {
+  var %x = 1
+  if $ini($oper,$1) {
+    if $user.isadm($1) { var %st = $replace($dados($1,adm),nao,14*,sim,4*) }
+    elseif $user.isop($1) { var %st = $replace($dados($1,oper),nao,14@,sim,02@) }
+    elseif $user.isatu($1) { var %st = $replace($dados($1,atualizar),nao,14+,sim,03+) }
+  }
+  while %x <= $chat(0) {
+    if ($dados($chat(%x),ident) = sim) && ($chat(%x) != $nick) && $dados($chat(%x),chat) { msg = $+ $chat(%x) 14<01 $+ %st $+ $1 $+ 14> $2- }
+    inc %x
+  }
+}
+alias msgall+ { var %x = 1 | while %x <= $chat(0) { if ($dados($chat(%x),chat)) && ($chat(%x).status = active) { msg = $+ $chat(%x) $1- } | inc %x } }
