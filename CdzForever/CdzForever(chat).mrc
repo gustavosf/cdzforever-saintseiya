@@ -107,6 +107,9 @@ alias apres.inicial {
     msgt 0Fique atento sobre as novidades do canal, digitando 
     msgt 0sempre o comando 7!9News
     msgdiv 
+    msgt 0Para informações uteis acesse nossa wiki
+    msgt 0http://cdzforever.net/wiki
+    msgdiv
     msgt 7"0Seja um Cavaleiro. Lute por seu Deus.
     msgt 0Seja um #CdzForever!7"
     msgt 

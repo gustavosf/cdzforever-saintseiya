@@ -2,5 +2,9 @@ logs/*
 users/*
 users2/*
 sys/*.txt
+sys/top/*
+sys/logs/*
+semana.ini
+servers.ini
 *.log
 *.db
